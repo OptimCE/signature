@@ -28,8 +28,12 @@ its « Changes from the 01/11 draft »).
 - `worker/` — `dispatcher` (3 durables, the ack/nak/DLQ matrix), `scheduler`, `main`.
 - `devpki/` — a disposable PKI + TSA/OCSP/CRL (Certomancer) for the tests and
   the dev stack's `signature-test-pki`; never in a production image.
-- `consent/v1/<locale>.json` — the statement per capacity; a new wording is a
-  new version folder, never an edit (its digest is in the evidence).
+- `consent/<version>/<locale>.json` — the statement per capacity; a new wording
+  is a new version folder, never an edit (its digest is in the evidence). New
+  requests take `CONSENT_VERSION` (v2 since 11-03: v1's three sentences plus
+  `ON_BEHALF`, « au nom et pour le compte de … », for another account linked to
+  the member). `signer_actions.consent_for` picks the sentence, the same on the
+  screen and at the sign call; a v1 request keeps « en mon nom propre ».
 - `document-templates/signature/evidence/v2/` — the evidence report (docgen
   jinja-html). A change is a new version folder (docgen caches by URI);
   v2 (11-03) added « Signé par » (`signed_by_name`). v1 stays for old URIs.

@@ -138,7 +138,7 @@ LOCALES = ("fr", "en", "nl", "de")
 DEFAULT_LOCALE = "fr"
 
 # The consent statement a signer ticks; its texts live in consent/<version>/.
-CONSENT_VERSION = "v1"
+CONSENT_VERSION = "v2"
 
 # ---- NATS -------------------------------------------------------------------
 SUBJECT_REQUEST_CREATE = "signature.request.create"

@@ -4,6 +4,8 @@ The consent statement is versioned: ``consent/<version>/<locale>.json`` holds
 one sentence per capacity, and its SHA-256 (of the file's bytes) is stored on
 every signed event with the version, so the evidence names the exact words
 the signer ticked. A new wording is a new version folder, never an edit.
+Since v2 it also holds ``ON_BEHALF``: a member's own slot signed by another
+account linked to the member (v1 has none and says « en mon nom propre »).
 """
 
 from __future__ import annotations
@@ -47,8 +49,13 @@ def consent(
     member: str | None,
     community: str | None,
 ) -> Consent:
+    """``member`` is what ``signed_for`` returns: for a SELF slot, a member
+    means another account signs it for them, which v2 says (``ON_BEHALF``)."""
     texts, digest = _consent_file(version, locale if locale in LOCALES else DEFAULT_LOCALE)
-    text = texts[capacity.name].format(member=member or "", community=community or "")
+    key = capacity.name
+    if capacity is Capacity.SELF and member and "ON_BEHALF" in texts:
+        key = "ON_BEHALF"
+    text = texts[key].format(member=member or "", community=community or "")
     return Consent(version, locale, text, digest)
 
 

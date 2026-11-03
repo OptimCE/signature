@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ports.bus import RecordingBus
 from ports.storage import MemoryStore
 from service import evidence_report, jobs, requests
-from shared.const import DomainEvent
+from shared.const import CONSENT_VERSION, DomainEvent
 from shared.models.local_models import SignatureRequestModel, SignatureSignerModel
 from tests.world import User, World, anchored_pdf, headers, png_bytes
 
@@ -158,7 +158,7 @@ def sign_body(
         "typed_name": "Alice Martin" if method == "TYPED" else None,
         "image_png": "data:image/png;base64," + base64.b64encode(png_bytes()).decode(),
         "fields": fields or {},
-        "consent_version": "v1",
+        "consent_version": CONSENT_VERSION,
         "consent_accepted": True,
         "document_sha256": sha,
     }

@@ -12,7 +12,7 @@ from domain.evidence import canonical_json, event_hash, verify_chain
 from domain.payloads import CreateRequestIn
 from domain.slots import SlotError, normalise_rect, parse_slot
 from service.keys import document_allowed
-from shared.const import Capacity, SlotKind
+from shared.const import CONSENT_VERSION, Capacity, SlotKind
 
 ORIGINAL = hashlib.sha256(b"%PDF-1.7 original").hexdigest()
 AT = datetime.datetime(2026, 11, 3, 9, 30, 0, 123456, tzinfo=datetime.UTC)
@@ -213,8 +213,42 @@ class TestWording:
     @pytest.mark.parametrize("locale", ["fr", "en", "nl", "de"])
     def test_every_locale_has_every_capacity(self, locale):
         for capacity in Capacity:
-            assert wording.consent("v1", locale, capacity, member="M", community="C").text
+            for version in ("v1", "v2"):
+                assert wording.consent(version, locale, capacity, member="M", community="C").text
             assert wording.reason(locale, capacity, name="N", member="M", community="C")
+
+    def test_new_requests_take_v2_whose_first_three_sentences_are_v1s(self):
+        assert CONSENT_VERSION == "v2"
+        for locale in ("fr", "en", "nl", "de"):
+            for capacity in Capacity:
+                kwargs = {"member": None, "community": "C"}
+                if capacity is Capacity.LEGAL_REPRESENTATIVE:
+                    kwargs["member"] = "ACME SRL"
+                v1 = wording.consent("v1", locale, capacity, **kwargs)
+                v2 = wording.consent("v2", locale, capacity, **kwargs)
+                assert v1.text == v2.text
+                assert v1.sha256 != v2.sha256  # the evidence tells the two files apart
+
+    @pytest.mark.parametrize("locale", ["fr", "en", "nl", "de"])
+    def test_v2_says_when_someone_signs_for_the_member(self, locale):
+        own = wording.consent("v2", locale, Capacity.SELF, member=None, community=None)
+        other = wording.consent("v2", locale, Capacity.SELF, member="Alice Martin", community=None)
+        assert "Alice Martin" in other.text and "Alice Martin" not in own.text
+        assert other.text != own.text
+
+    def test_the_on_behalf_sentence_in_french(self):
+        assert wording.consent(
+            "v2", "fr", Capacity.SELF, member="Alice Martin", community=None
+        ).text == (
+            "J'ai lu ce document et je le signe électroniquement au nom et pour le compte de "
+            "Alice Martin, qui m'en a donné l'autorisation."
+        )
+
+    def test_a_v1_request_keeps_its_own_sentence(self):
+        """v1 has no ON_BEHALF: a request created before v2 shows what it always did."""
+        assert wording.consent(
+            "v1", "fr", Capacity.SELF, member="Alice Martin", community=None
+        ).text == ("J'ai lu ce document et je le signe électroniquement en mon nom propre.")
 
     @pytest.mark.parametrize(
         ("user_name", "user_email", "same"),

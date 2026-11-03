@@ -1,0 +1,6 @@
+{
+  "SELF": "I have read this document and I sign it electronically on my own behalf.",
+  "LEGAL_REPRESENTATIVE": "I have read this document and I sign it electronically as legal representative of {member}.",
+  "COMMUNITY_ADMIN": "I have read this document and I sign it electronically for the community {community}.",
+  "ON_BEHALF": "I have read this document and I sign it electronically in the name and on behalf of {member}, who has authorised me to do so."
+}

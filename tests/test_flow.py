@@ -18,8 +18,9 @@ import pytest_asyncio
 from sqlalchemy import select, text
 
 from crypto import seal
+from domain import wording
 from service import sweep
-from shared.const import DomainEvent, EventType, RequestStatus, SignerStatus
+from shared.const import Capacity, DomainEvent, EventType, RequestStatus, SignerStatus
 from shared.models.local_models import (
     SignatureEventModel,
     SignatureFieldModel,
@@ -283,12 +284,38 @@ class TestOneSigner:
             {"u": world.eve.id, "m": world.alice_member},
         )
         await db_session.commit()
+        # Each reads the sentence for who they are: Alice signs for herself, Eve for her.
+        on_behalf = (
+            "J'ai lu ce document et je le signe électroniquement au nom et pour le compte de "
+            "Alice Martin, qui m'en a donné l'autorisation."
+        )
+        consents = {}
+        for user in (world.alice, world.eve):
+            detail = await client.get(f"/requests/{request.id}", headers=headers(user))
+            consents[user.sub] = detail.json()["data"]["my_slots"][0]["consent_text"]
+        assert consents[world.alice.sub].endswith("en mon nom propre.")
+        assert consents[world.eve.sub] == on_behalf
         response = await flow.sign(
             client, world.eve, request.id, slot.id, fields={"place": "Namur"}
         )
         assert response.status_code == 202
         (slot,) = await flow.signers(db_session, request.id)
         assert slot.signed_by_sub == world.eve.sub
+        # The log keeps the sentence Eve ticked, with the v2 file's digest.
+        ticked = (
+            await db_session.execute(
+                select(SignatureEventModel).where(
+                    SignatureEventModel.request_id == request.id,
+                    SignatureEventModel.type == EventType.SIGNER_REAUTHENTICATED,
+                )
+            )
+        ).scalar_one()
+        assert ticked.consent_version == "v2"
+        assert ticked.payload["consent_text"] == on_behalf
+        assert (
+            ticked.payload["consent_sha256"]
+            == wording.consent("v2", "fr", Capacity.SELF, member=None, community=None).sha256
+        )
         # The PDF names Eve, for Alice: not Alice, and not « en son nom propre ».
         assert slot.signed_by_name == "Eve Outsider"
         await flow.seal(db_session, store, bus, material, request.id, slot.id)

@@ -21,7 +21,7 @@ from domain.evidence import verify_chain
 from ports.crm_read import CrmRead
 from ports.storage import DocumentStore, ObjectNotFound, TransientStorageError
 from service.log import event_row
-from service.signer_actions import Caller, may_follow, may_sign, require_module
+from service.signer_actions import Caller, consent_for, may_follow, may_sign, require_module
 from shared.const import (
     Capacity,
     FieldType,
@@ -212,13 +212,7 @@ async def detail(
     mine = {s.id for s in seen.my_slots}
     my_slots = []
     for signer in seen.my_slots:
-        consent = wording.consent(
-            request.consent_version,
-            request.locale,
-            Capacity(signer.capacity),
-            member=signer.member_label,
-            community=community,
-        )
+        consent = consent_for(request, signer, caller.user, community)
         my_slots.append(
             {
                 "signer_id": str(signer.id),

@@ -120,6 +120,37 @@ async def may_follow(crm: AsyncSession, request: SignatureRequestModel, user: Us
     return role in ("MANAGER", "ADMIN")
 
 
+def signer_name_for(signer: SignatureSignerModel, user: UserInfo) -> str:
+    """What the PDF and the evidence call ``user`` when they sign this slot."""
+    return wording.signed_by_name(
+        Capacity(signer.capacity),
+        user_name=user.display_name,
+        user_email=user.email,
+        slot_name=signer.display_name,
+        slot_email=signer.email,
+    )
+
+
+def consent_for(
+    request: SignatureRequestModel,
+    signer: SignatureSignerModel,
+    user: UserInfo,
+    community: str | None,
+) -> wording.Consent:
+    """The sentence ``user`` ticks for this slot, the same on the screen and at
+    the sign call: « au nom et pour le compte de … » when they sign for someone else."""
+    capacity = Capacity(signer.capacity)
+    for_member = wording.signed_for(
+        capacity,
+        person=signer_name_for(signer, user),
+        slot_name=signer.display_name,
+        member_label=signer.member_label,
+    )
+    return wording.consent(
+        request.consent_version, request.locale, capacity, member=for_member, community=community
+    )
+
+
 async def _load(
     local: AsyncSession, request_id: uuid.UUID, signer_id: uuid.UUID, *, lock: bool
 ) -> tuple[SignatureRequestModel, SignatureSignerModel]:
@@ -317,13 +348,7 @@ async def sign(
     await store.put(key, image, "image/png")
 
     community = await CrmRead(crm).community_name(request.id_community)
-    consent = wording.consent(
-        request.consent_version,
-        request.locale,
-        Capacity(signer.capacity),
-        member=signer.member_label,
-        community=community,
-    )
+    consent = consent_for(request, signer, caller.user, community)
     for item in own:
         if item.name in values:
             item.value = values[item.name]
@@ -334,13 +359,7 @@ async def sign(
     signer.image_sha256 = image_sha
     signer.signed_by_sub = caller.user.sub
     signer.signed_by_user_id = caller.user.id
-    signer.signed_by_name = wording.signed_by_name(
-        Capacity(signer.capacity),
-        user_name=caller.user.display_name,
-        user_email=caller.user.email,
-        slot_name=signer.display_name,
-        slot_email=signer.email,
-    )
+    signer.signed_by_name = signer_name_for(signer, caller.user)
     signer.viewed_revision = viewed
     await append_event(
         local,

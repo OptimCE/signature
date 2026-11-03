@@ -1,0 +1,6 @@
+{
+  "SELF": "Ik heb dit document gelezen en onderteken het elektronisch in eigen naam.",
+  "LEGAL_REPRESENTATIVE": "Ik heb dit document gelezen en onderteken het elektronisch als wettelijk vertegenwoordiger van {member}.",
+  "COMMUNITY_ADMIN": "Ik heb dit document gelezen en onderteken het elektronisch voor de gemeenschap {community}.",
+  "ON_BEHALF": "Ik heb dit document gelezen en onderteken het elektronisch in naam en voor rekening van {member}, die mij daartoe heeft gemachtigd."
+}
