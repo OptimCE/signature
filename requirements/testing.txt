@@ -7,3 +7,6 @@ httpx==0.28.1
 # A disposable PKI + timestamp authority for the tests and the dev stack
 # (devpki/, by pyHanko's author, MIT).
 certomancer[web-api]==0.16.0
+# Renders the evidence template the way document-generation does (its pin),
+# in tests only: the service itself never renders it.
+jinja2==3.1.4

@@ -34,9 +34,13 @@ its « Changes from the 01/11 draft »).
   `ON_BEHALF`, « au nom et pour le compte de … », for another account linked to
   the member). `signer_actions.consent_for` picks the sentence, the same on the
   screen and at the sign call; a v1 request keeps « en mon nom propre ».
-- `document-templates/signature/evidence/v2/` — the evidence report (docgen
+- `document-templates/signature/evidence/v3/` — the evidence report (docgen
   jinja-html). A change is a new version folder (docgen caches by URI);
-  v2 (11-03) added « Signé par » (`signed_by_name`). v1 stays for old URIs.
+  v2 (11-03) added « Signé par » (`signed_by_name`); v3 (11-03) says « au nom
+  et pour le compte de … » in « Qualité » (`signed_for`) and shows the UTC
+  times as dd/mm/yyyy hh:mm:ss. Older folders stay for old URIs. The tests
+  render the configured one as docgen does (`flow.render_evidence_html`:
+  jinja2 at docgen's pin, StrictUndefined), so a missing key fails here.
 
 ## The flow
 1. A domain publishes `signature.request.create` (Event envelope, `domain/payloads.py`).

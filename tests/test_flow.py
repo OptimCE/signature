@@ -11,6 +11,7 @@ import io
 import json
 import os
 import pathlib
+import re
 import uuid
 
 import pytest
@@ -158,6 +159,11 @@ class TestSequentialTwoSigners:
         assert evidence["signers"][1]["capacity"] == "LEGAL_REPRESENTATIVE"
         assert [s["signed_by_name"] for s in evidence["signers"]] == ["Alice Martin", "Bob Dupont"]
         assert [s["display_name"] for s in evidence["signers"]] == ["Alice Martin", "ACME SRL"]
+        assert [s["signed_for"] for s in evidence["signers"]] == [None, "ACME SRL"]
+        report = flow.render_evidence_html(evidence, request.evidence_json_sha256, "fr")
+        assert "en son nom propre" in report  # Alice, for herself
+        assert "représentant légal — ACME SRL" in report  # Bob, for ACME
+        assert "+00:00" not in report and " UTC" in report
 
         # The artifacts, for a signer and for a manager.
         final = await client.get(
@@ -333,6 +339,41 @@ class TestOneSigner:
         assert _named(store.objects[revision.key]) == {
             slot.field_name: ("Eve Outsider", "Signé par Eve Outsider pour Alice Martin")
         }
+
+    async def test_the_evidence_report_says_eve_signed_for_alice(
+        self, db_session, client, store, bus, material, world
+    ):
+        """« Qualité » followed the slot (SELF: « en son nom propre ») even when
+        another linked account signed; the times were raw ISO strings."""
+        request, slot = await self._open(db_session, store, bus, material, world)
+        await db_session.execute(
+            text("INSERT INTO user_member_link (id_user, id_member) VALUES (:u, :m)"),
+            {"u": world.eve.id, "m": world.alice_member},
+        )
+        await db_session.commit()
+        signed = await flow.sign(client, world.eve, request.id, slot.id, fields={"place": "Namur"})
+        assert signed.status_code == 202
+        await flow.seal(db_session, store, bus, material, request.id, slot.id)
+        assert await flow.complete(db_session, store, bus, material, request.id) == "completed"
+        request = await db_session.get(SignatureRequestModel, request.id, populate_existing=True)
+        evidence = json.loads(store.objects[request.evidence_json_key])
+        (signer,) = evidence["signers"]
+        assert (signer["signed_by_name"], signer["signed_for"]) == ("Eve Outsider", "Alice Martin")
+
+        report = flow.render_evidence_html(evidence, request.evidence_json_sha256, "fr")
+        assert "au nom et pour le compte de Alice Martin</dd>" in report
+        assert "en son nom propre" not in report
+        assert "<dd>Eve Outsider</dd>" in report
+        assert "+00:00" not in report
+        assert re.search(r"<dd>\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2} UTC</dd>", report)
+        for locale, words in {
+            "en": "in the name and on behalf of Alice Martin",
+            "nl": "in naam en voor rekening van Alice Martin",
+            "de": "im Namen und im Auftrag von Alice Martin",
+        }.items():
+            assert words in flow.render_evidence_html(
+                evidence, request.evidence_json_sha256, locale
+            )
 
     async def test_view_is_recorded_once_per_revision(
         self, db_session, client, store, bus, material, world

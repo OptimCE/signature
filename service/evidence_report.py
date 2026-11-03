@@ -7,7 +7,7 @@ the log, and states the chain's head after ``verify_chain`` recomputed it:
 a broken chain refuses the report (and fails the request) instead of
 certifying a log that was tampered with.
 
-docgen renders it from ``document-templates/signature/evidence/v2`` (the
+docgen renders it from ``document-templates/signature/evidence/v3`` (the
 signature domain's own template); its result comes back on
 ``docgen.result.signature``, correlated by ``evidence_request_id`` and never by
 its metadata. The PDF is then sealed PAdES-B-LT and the request COMPLETED.
@@ -176,6 +176,13 @@ async def build_evidence(
                 "typed_name": s.typed_name,
                 "image_sha256": s.image_sha256,
                 "signed_by_name": s.signed_by_name,
+                # Whom they signed for when not themselves: the PDF's « pour … ».
+                "signed_for": wording.signed_for(
+                    Capacity(s.capacity),
+                    person=s.signed_by_name or s.display_name,
+                    slot_name=s.display_name,
+                    member_label=s.member_label,
+                ),
                 "signed_by_sub": s.signed_by_sub,
                 "signed_by_user_id": s.signed_by_user_id,
                 "viewed_revision": s.viewed_revision,

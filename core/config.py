@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     DOCGEN_REQUEST_SUBJECT: str = "docgen.request"
     DOCGEN_RESULT_SUBJECT: str = "docgen.result.signature"
     DOCGEN_PRESIGN_TTL: int = 3600
-    EVIDENCE_TEMPLATE_URI: str = "s3://optimce-templates/signature/evidence/v2/"
+    EVIDENCE_TEMPLATE_URI: str = "s3://optimce-templates/signature/evidence/v3/"
 
     # ---- The seal (worker only) ----
     # The platform's seal certificate and key, a PKCS#12 file mounted as a

@@ -1,0 +1,20 @@
+{
+  "id": "signature.evidence",
+  "version": "2026.11.03.3",
+  "engine": "jinja-html",
+  "supported_formats": ["pdf"],
+  "entrypoint": "template.html",
+  "output_basename": "rapport-de-preuve",
+  "_source": "OptimCE's own layout: the evidence report of one signature request, rendered from evidence.json (signature/service/evidence_report.py) and sealed PAdES-B-LT by the signature worker.",
+  "required_fields": {
+    "type": "object",
+    "required": ["evidence", "evidence_json_sha256"],
+    "properties": {
+      "evidence": {
+        "type": "object",
+        "required": ["format", "request", "document", "signers", "events", "chain", "consent"]
+      },
+      "evidence_json_sha256": {"type": "string", "minLength": 64, "maxLength": 64}
+    }
+  }
+}

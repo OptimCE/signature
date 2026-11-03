@@ -1,0 +1,163 @@
+{%- set L = {
+  "fr": {
+    "title": "Rapport de preuve de signature électronique",
+    "intro": "Ce rapport accompagne le document signé ci-dessous. Il est scellé par OptimCE ; il ne fait pas partie du document signé, qu'il désigne par son empreinte SHA-256.",
+    "request": "Demande", "reference": "Référence", "community": "Communauté", "document": "Document",
+    "created": "Créée le", "order": "Ordre de signature", "PARALLEL": "en parallèle", "SEQUENTIAL": "l'un après l'autre",
+    "files": "Fichiers", "original": "Original (tel qu'émis)", "final": "Document signé (PAdES-B-LTA)", "revisions": "Révision",
+    "signers": "Signataires", "capacity": "Qualité", "SELF": "en son nom propre", "LEGAL_REPRESENTATIVE": "représentant légal", "COMMUNITY_ADMIN": "pour la communauté", "ON_BEHALF": "au nom et pour le compte de",
+    "method": "Méthode", "TYPED": "nom saisi", "DRAWN": "signature tracée", "signed_at": "Signé le", "fields": "Champs remplis", "account": "Compte", "signed_by": "Signé par",
+    "consent": "Déclaration de consentement", "version": "version",
+    "events": "Journal des événements", "at": "Date (UTC)", "event": "Événement", "who": "Qui", "context": "Contexte",
+    "chain": "Chaîne d'empreintes", "chain_text": "Chaque événement est lié au précédent par son empreinte ; le premier part de l'empreinte du document original. La chaîne a été recalculée à la génération de ce rapport.",
+    "head": "Dernière empreinte", "count": "Événements", "verified": "vérifiée",
+    "json": "Empreinte de evidence.json", "level": "Signature électronique simple (eIDAS) : l'identité de chaque signataire est établie par son authentification et par ce journal ; le sceau cryptographique est celui de la plateforme.",
+    "types": {"request.created": "Demande créée", "document.prepared": "Document préparé et certifié", "signer.invited": "Signataire invité", "signer.viewed": "Document consulté", "signer.reauthenticated": "Signature demandée (connexion récente)", "signer.signed": "Signature scellée", "signer.declined": "Refus de signer", "request.reminded": "Rappel envoyé", "request.completed": "Demande terminée", "request.cancelled": "Demande annulée", "request.expired": "Demande expirée", "request.failed": "Demande en échec"}
+  },
+  "en": {
+    "title": "Electronic signature evidence report",
+    "intro": "This report accompanies the signed document below. It is sealed by OptimCE; it is not part of the signed document, which it names by its SHA-256 digest.",
+    "request": "Request", "reference": "Reference", "community": "Community", "document": "Document",
+    "created": "Created on", "order": "Signing order", "PARALLEL": "parallel", "SEQUENTIAL": "one after the other",
+    "files": "Files", "original": "Original (as issued)", "final": "Signed document (PAdES-B-LTA)", "revisions": "Revision",
+    "signers": "Signers", "capacity": "Capacity", "SELF": "on their own behalf", "LEGAL_REPRESENTATIVE": "legal representative", "COMMUNITY_ADMIN": "for the community", "ON_BEHALF": "in the name and on behalf of",
+    "method": "Method", "TYPED": "typed name", "DRAWN": "drawn signature", "signed_at": "Signed on", "fields": "Fields filled", "account": "Account", "signed_by": "Signed by",
+    "consent": "Consent statement", "version": "version",
+    "events": "Event log", "at": "Date (UTC)", "event": "Event", "who": "Who", "context": "Context",
+    "chain": "Hash chain", "chain_text": "Each event is linked to the previous one by its digest; the first one starts from the original document's digest. The chain was recomputed when this report was generated.",
+    "head": "Last digest", "count": "Events", "verified": "verified",
+    "json": "Digest of evidence.json", "level": "Simple electronic signature (eIDAS): each signer's identity is established by their authentication and by this log; the cryptographic seal is the platform's.",
+    "types": {"request.created": "Request created", "document.prepared": "Document prepared and certified", "signer.invited": "Signer invited", "signer.viewed": "Document viewed", "signer.reauthenticated": "Signature requested (recent login)", "signer.signed": "Signature sealed", "signer.declined": "Declined to sign", "request.reminded": "Reminder sent", "request.completed": "Request completed", "request.cancelled": "Request cancelled", "request.expired": "Request expired", "request.failed": "Request failed"}
+  },
+  "nl": {
+    "title": "Bewijsrapport van elektronische handtekening",
+    "intro": "Dit rapport hoort bij het hieronder ondertekende document. Het is verzegeld door OptimCE; het maakt geen deel uit van het ondertekende document, dat het aanduidt met zijn SHA-256-vingerafdruk.",
+    "request": "Verzoek", "reference": "Referentie", "community": "Gemeenschap", "document": "Document",
+    "created": "Aangemaakt op", "order": "Volgorde", "PARALLEL": "parallel", "SEQUENTIAL": "na elkaar",
+    "files": "Bestanden", "original": "Origineel (zoals uitgegeven)", "final": "Ondertekend document (PAdES-B-LTA)", "revisions": "Revisie",
+    "signers": "Ondertekenaars", "capacity": "Hoedanigheid", "SELF": "in eigen naam", "LEGAL_REPRESENTATIVE": "wettelijk vertegenwoordiger", "COMMUNITY_ADMIN": "voor de gemeenschap", "ON_BEHALF": "in naam en voor rekening van",
+    "method": "Methode", "TYPED": "getypte naam", "DRAWN": "getekende handtekening", "signed_at": "Ondertekend op", "fields": "Ingevulde velden", "account": "Account", "signed_by": "Ondertekend door",
+    "consent": "Toestemmingsverklaring", "version": "versie",
+    "events": "Gebeurtenissenlogboek", "at": "Datum (UTC)", "event": "Gebeurtenis", "who": "Wie", "context": "Context",
+    "chain": "Hashketen", "chain_text": "Elke gebeurtenis is via haar vingerafdruk met de vorige verbonden; de eerste vertrekt van de vingerafdruk van het originele document. De keten werd herberekend bij het aanmaken van dit rapport.",
+    "head": "Laatste vingerafdruk", "count": "Gebeurtenissen", "verified": "geverifieerd",
+    "json": "Vingerafdruk van evidence.json", "level": "Gewone elektronische handtekening (eIDAS): de identiteit van elke ondertekenaar blijkt uit zijn authenticatie en uit dit logboek; het cryptografische zegel is dat van het platform.",
+    "types": {"request.created": "Verzoek aangemaakt", "document.prepared": "Document voorbereid en gecertificeerd", "signer.invited": "Ondertekenaar uitgenodigd", "signer.viewed": "Document bekeken", "signer.reauthenticated": "Handtekening gevraagd (recente aanmelding)", "signer.signed": "Handtekening verzegeld", "signer.declined": "Weigering te ondertekenen", "request.reminded": "Herinnering verstuurd", "request.completed": "Verzoek voltooid", "request.cancelled": "Verzoek geannuleerd", "request.expired": "Verzoek verlopen", "request.failed": "Verzoek mislukt"}
+  },
+  "de": {
+    "title": "Nachweisbericht der elektronischen Signatur",
+    "intro": "Dieser Bericht gehört zum unten genannten unterzeichneten Dokument. Er ist von OptimCE versiegelt; er ist nicht Teil des unterzeichneten Dokuments, das er über seinen SHA-256-Hashwert bezeichnet.",
+    "request": "Anfrage", "reference": "Referenz", "community": "Gemeinschaft", "document": "Dokument",
+    "created": "Erstellt am", "order": "Reihenfolge", "PARALLEL": "parallel", "SEQUENTIAL": "nacheinander",
+    "files": "Dateien", "original": "Original (wie ausgestellt)", "final": "Unterzeichnetes Dokument (PAdES-B-LTA)", "revisions": "Revision",
+    "signers": "Unterzeichner", "capacity": "Eigenschaft", "SELF": "im eigenen Namen", "LEGAL_REPRESENTATIVE": "gesetzlicher Vertreter", "COMMUNITY_ADMIN": "für die Gemeinschaft", "ON_BEHALF": "im Namen und im Auftrag von",
+    "method": "Methode", "TYPED": "getippter Name", "DRAWN": "gezeichnete Unterschrift", "signed_at": "Unterzeichnet am", "fields": "Ausgefüllte Felder", "account": "Konto", "signed_by": "Unterzeichnet von",
+    "consent": "Einverständniserklärung", "version": "Version",
+    "events": "Ereignisprotokoll", "at": "Datum (UTC)", "event": "Ereignis", "who": "Wer", "context": "Kontext",
+    "chain": "Hashkette", "chain_text": "Jedes Ereignis ist über seinen Hashwert mit dem vorherigen verbunden; das erste geht vom Hashwert des Originaldokuments aus. Die Kette wurde bei der Erstellung dieses Berichts neu berechnet.",
+    "head": "Letzter Hashwert", "count": "Ereignisse", "verified": "geprüft",
+    "json": "Hashwert von evidence.json", "level": "Einfache elektronische Signatur (eIDAS): die Identität jedes Unterzeichners ergibt sich aus seiner Authentifizierung und aus diesem Protokoll; das kryptografische Siegel ist das der Plattform.",
+    "types": {"request.created": "Anfrage erstellt", "document.prepared": "Dokument vorbereitet und zertifiziert", "signer.invited": "Unterzeichner eingeladen", "signer.viewed": "Dokument angesehen", "signer.reauthenticated": "Signatur angefordert (kürzliche Anmeldung)", "signer.signed": "Signatur versiegelt", "signer.declined": "Unterzeichnung abgelehnt", "request.reminded": "Erinnerung gesendet", "request.completed": "Anfrage abgeschlossen", "request.cancelled": "Anfrage storniert", "request.expired": "Anfrage abgelaufen", "request.failed": "Anfrage fehlgeschlagen"}
+  }
+} -%}
+{%- set t = L[locale] if locale in L else L["fr"] -%}
+{%- set e = data.evidence -%}
+{#- evidence.json writes every time as UTC ISO 8601 (2026-11-03T15:05:13.493129+00:00):
+    shown dd/mm/yyyy hh:mm:ss, « UTC » where no column header says it. -#}
+{%- macro ts(v, zone=true) -%}
+{%- if v -%}{{ v[8:10] }}/{{ v[5:7] }}/{{ v[0:4] }} {{ v[11:19] }}{% if zone %} UTC{% endif %}{%- else -%}—{%- endif -%}
+{%- endmacro -%}
+<!doctype html>
+<html lang="{{ locale if locale in L else 'fr' }}">
+<head>
+<meta charset="utf-8">
+<title>{{ t.title }}</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; @bottom-right { content: counter(page) " / " counter(pages); font-size: 7.5pt; color: #7b8794; } }
+  body { font-family: "DejaVu Sans", sans-serif; font-size: 8.5pt; color: #1f2933; line-height: 1.35; }
+  h1 { font-size: 14pt; margin: 0 0 2mm; }
+  h2 { font-size: 10.5pt; margin: 6mm 0 2mm; border-bottom: 0.3mm solid #cbd2d9; padding-bottom: 1mm; }
+  .intro { color: #52606d; margin: 0 0 4mm; }
+  dl { display: grid; grid-template-columns: 42mm 1fr; gap: 1mm 4mm; margin: 0; }
+  dt { color: #52606d; }
+  dd { margin: 0; }
+  code { font-family: "DejaVu Sans Mono", monospace; font-size: 7pt; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1.5mm; table-layout: fixed; }
+  th, td { border: 0.25mm solid #cbd2d9; padding: 1mm 1.5mm; text-align: left; vertical-align: top; word-wrap: break-word; }
+  th { background: #f0f4f8; }
+  .signer { border: 0.3mm solid #cbd2d9; padding: 2mm 3mm; margin: 0 0 2mm; page-break-inside: avoid; }
+  .muted { color: #7b8794; }
+  .level { margin-top: 5mm; padding: 2mm 3mm; background: #f0f4f8; }
+</style>
+</head>
+<body>
+<h1>{{ t.title }}</h1>
+<p class="intro">{{ t.intro }}</p>
+
+<h2>{{ t.request }}</h2>
+<dl>
+  <dt>{{ t.reference }}</dt><dd>{{ e.request.reference }} <span class="muted"><code>{{ e.request.id }}</code></span></dd>
+  <dt>{{ t.document }}</dt><dd>{{ e.request.title }}</dd>
+  <dt>{{ t.community }}</dt><dd>{{ e.request.community or e.request.community_id }}</dd>
+  <dt>{{ t.created }}</dt><dd>{{ ts(e.request.created_at) }}</dd>
+  <dt>{{ t.order }}</dt><dd>{{ t[e.request.signing_order] }}</dd>
+</dl>
+
+<h2>{{ t.files }}</h2>
+<dl>
+  <dt>{{ t.original }}</dt><dd><code>{{ e.document.original_sha256 }}</code></dd>
+  <dt>{{ t.final }}</dt><dd><code>{{ e.document.final_sha256 }}</code></dd>
+  <dt>{{ t.json }}</dt><dd><code>{{ data.evidence_json_sha256 }}</code></dd>
+</dl>
+<table>
+  <tr><th style="width:8mm">#</th><th style="width:24mm">{{ t.revisions }}</th><th>SHA-256</th><th style="width:38mm">{{ t.at }}</th></tr>
+  {%- for r in e.document.revisions %}
+  <tr><td>{{ r.number }}</td><td>{{ r.kind }}{% if r.signer_position %} ({{ r.signer_position }}){% endif %}</td><td><code>{{ r.sha256 }}</code></td><td>{{ ts(r.created_at, false) }}</td></tr>
+  {%- endfor %}
+</table>
+
+<h2>{{ t.signers }}</h2>
+{%- for s in e.signers %}
+<div class="signer">
+  <strong>{{ s.position }}. {{ s.display_name }}</strong> — {{ s.role_label }}
+  <dl>
+    <dt>{{ t.capacity }}</dt><dd>{% if s.capacity == "SELF" and s.signed_for %}{{ t.ON_BEHALF }} {{ s.signed_for }}{% else %}{{ t[s.capacity] }}{% if s.member_label %} — {{ s.member_label }}{% endif %}{% endif %}</dd>
+    <dt>{{ t.method }}</dt><dd>{{ t[s.method] if s.method else "—" }}{% if s.typed_name %} « {{ s.typed_name }} »{% endif %}</dd>
+    <dt>{{ t.signed_at }}</dt><dd>{{ ts(s.signed_at) }}</dd>
+    <dt>{{ t.signed_by }}</dt><dd>{{ s.signed_by_name or "—" }}</dd>
+    <dt>{{ t.account }}</dt><dd><code>{{ s.signed_by_sub or "—" }}</code></dd>
+    {%- if s.consent_text %}
+    <dt>{{ t.consent }}</dt><dd>« {{ s.consent_text }} »</dd>
+    {%- endif %}
+    {%- if s.fields %}
+    <dt>{{ t.fields }}</dt><dd>{% for name, value in s.fields | dictsort %}{{ name }} = {{ value }}{% if not loop.last %} ; {% endif %}{% endfor %}</dd>
+    {%- endif %}
+  </dl>
+</div>
+{%- endfor %}
+
+<p class="muted">{{ t.consent }} : {{ t.version }} {{ e.consent.version }} (<code>{{ e.consent.sha256 }}</code>)</p>
+
+<h2>{{ t.events }}</h2>
+<table>
+  <tr><th style="width:8mm">#</th><th style="width:34mm">{{ t.at }}</th><th style="width:40mm">{{ t.event }}</th><th style="width:28mm">{{ t.who }}</th><th>{{ t.context }}</th></tr>
+  {%- for ev in e.events %}
+  <tr>
+    <td>{{ ev.seq }}</td>
+    <td>{{ ts(ev.at, false) }}</td>
+    <td>{{ t.types[ev.type] if ev.type in t.types else ev.type }}{% if ev.signer_position %} ({{ ev.signer_position }}){% endif %}</td>
+    <td><code>{{ ev.actor_sub or "OptimCE" }}</code></td>
+    <td>{% if ev.ip %}IP {{ ev.ip }} · {% endif %}{% if ev.auth_time %}auth {{ ts(ev.auth_time, false) }} · {% endif %}{% if ev.document_sha256 %}<code>{{ ev.document_sha256[:16] }}…</code>{% endif %}<br><span class="muted"><code>{{ ev.hash }}</code></span></td>
+  </tr>
+  {%- endfor %}
+</table>
+
+<h2>{{ t.chain }}</h2>
+<p>{{ t.chain_text }}</p>
+<dl>
+  <dt>{{ t.count }}</dt><dd>{{ e.chain.events }} — {{ t.verified if e.chain.verified else "✗" }}</dd>
+  <dt>{{ t.head }}</dt><dd><code>{{ e.chain.head }}</code></dd>
+</dl>
+<p class="level">{{ t.level }}</p>
+</body>
+</html>

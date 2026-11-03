@@ -5,12 +5,14 @@ from __future__ import annotations
 import base64
 import hashlib
 import uuid
+from pathlib import Path
 from typing import Any
 
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import settings
 from ports.bus import RecordingBus
 from ports.storage import MemoryStore
 from service import evidence_report, jobs, requests
@@ -236,3 +238,21 @@ async def complete(
 
 def events_of(bus: RecordingBus, kind: DomainEvent) -> list[dict[str, Any]]:
     return [data for _source, event, data in bus.events if event is kind]
+
+
+TEMPLATES = Path(__file__).resolve().parent.parent / "document-templates"
+
+
+def render_evidence_html(evidence: dict[str, Any], json_sha256: str, locale: str) -> str:
+    """The configured evidence template, rendered as document-generation's
+    jinja-html engine does (same loader, autoescape and StrictUndefined)."""
+    from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
+
+    folder = settings.EVIDENCE_TEMPLATE_URI.rstrip("/").split("/", 3)[3]
+    env = Environment(
+        loader=FileSystemLoader(str(TEMPLATES / folder)),
+        autoescape=select_autoescape(default=True, default_for_string=True),
+        undefined=StrictUndefined,
+    )
+    data = {"evidence": evidence, "evidence_json_sha256": json_sha256}
+    return env.get_template("template.html").render(data=data, locale=locale)
