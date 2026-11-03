@@ -1,0 +1,52 @@
+# ---------- stage 1: build ----------
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+COPY requirements/base.txt   requirements/base.txt
+COPY requirements/worker.txt requirements/worker.txt
+
+RUN pip install --no-cache-dir --prefix=/install -r requirements/worker.txt
+
+# ---------- stage 2: runtime ----------
+FROM python:3.12-slim
+
+# tini gives us a real PID 1: forwards SIGTERM to the Python process so the
+# drain in worker.main actually runs, and reaps zombies on shutdown.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# Security: non-root user
+RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+# No main.py and no api/: requirements/worker.txt has no fastapi, so a worker
+# module reaching something that imports it would crash the container at
+# start (tests/test_worker_import_graph.py pins it). crypto/ is the seal;
+# devpki/ (the test PKI) is never shipped.
+COPY core/    core/
+COPY crypto/  crypto/
+COPY domain/  domain/
+COPY ports/   ports/
+COPY service/ service/
+COPY shared/  shared/
+COPY worker/  worker/
+COPY locales/ locales/
+COPY consent/ consent/
+
+RUN chown -R app:app /app
+USER app
+
+# Liveness: worker.main touches /tmp/worker.alive every ~15 s while the event
+# loop is responsive. ~3 missed touches = unhealthy.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=600s --retries=3 \
+    CMD python -c "import os, time, sys; sys.exit(0 if time.time() - os.path.getmtime('/tmp/worker.alive') < 60 else 1)"
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["python", "-m", "worker.main"]

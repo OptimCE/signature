@@ -1,0 +1,71 @@
+name: Update OpenAPI documentation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - docs/**
+
+jobs:
+  build-and-deploy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/all.txt
+
+      - name: Export OpenAPI spec (JSON)
+        env:
+          CRM_DATABASE_URL: "postgresql+asyncpg://user:pass@localhost/dummy"
+          LOCAL_DATABASE_URL: "postgresql+asyncpg://user:pass@localhost/dummy"
+        run: |
+          mkdir -p docs
+          python scripts/export_openapi.py docs/openapi.json
+
+      - name: Convert JSON to YAML
+        run: |
+          python -c "import json, yaml, sys; \
+            spec = json.load(open('docs/openapi.json')); \
+            yaml.safe_dump(spec, open('docs/swagger.yml', 'w'), sort_keys=False)"
+
+      - name: Generate Redoc HTML
+        run: npx @redocly/cli build-docs docs/swagger.yml -o docs/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

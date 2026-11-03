@@ -1,0 +1,42 @@
+# ---------- stage 1: build ----------
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+COPY requirements/base.txt requirements/base.txt
+COPY requirements/api.txt  requirements/api.txt
+
+RUN pip install --no-cache-dir --prefix=/install -r requirements/api.txt
+
+# ---------- stage 2: runtime ----------
+FROM python:3.12-slim
+
+# Security: non-root user
+RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+# The API never seals (no pyHanko here, and never the seal's key): crypto/ and
+# worker/ are absent on purpose. consent/ holds the versioned statements the
+# signing screen shows and the evidence records.
+COPY main.py .
+COPY core/ core/
+COPY api/ api/
+COPY domain/ domain/
+COPY ports/ ports/
+COPY service/ service/
+COPY shared/ shared/
+COPY scripts/ scripts/
+COPY locales/ locales/
+COPY consent/ consent/
+
+RUN chown -R app:app /app
+USER app
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--limit-max-requests", "2097152"]

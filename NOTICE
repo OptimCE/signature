@@ -1,0 +1,23 @@
+OptimCE — Signature
+Copyright 2026 OptimCE
+
+This product includes software developed by OptimCE, licensed under the Apache
+License, Version 2.0 (see LICENSE).
+
+
+THIRD-PARTY MATERIAL — CWaPE REGULATORY FORM (TEST FIXTURE)
+===========================================================
+
+tests/fixtures/annex8-rendered.pdf is the CWaPE's « Annexe 8 — déclaration sur
+l'honneur du participant au partage », filled by document-generation with
+fictitious data. It is NOT OptimCE-authored content and NOT covered by the
+Apache-2.0 grant; rights remain with the Commission wallonne pour l'Énergie
+(https://www.cwape.be). It is used only to test that the regulator's own form
+can be signed.
+
+
+THIRD-PARTY SOFTWARE
+====================
+
+pyHanko and pyhanko-certvalidator (MIT), pypdf (BSD-3-Clause), Pillow (HPND),
+and, for the tests and the dev stack only, Certomancer (MIT).

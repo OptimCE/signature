@@ -1,0 +1,34 @@
+{
+  "ERRORS": {
+    "AUTH": {
+      "UNAUTHORIZED": "Authentifizierung erforderlich (Code: 1)",
+      "FORBIDDEN": "Zugriff verweigert (Code: 2)",
+      "RATE_LIMITED": "Zu viele Anfragen, bitte später erneut versuchen (Code: 3)",
+      "AUTHORIZATION_MISSING": "Autorisierungs-Header fehlt (Code: 4)"
+    },
+    "SUBSCRIPTION": {
+      "NOT_SUBSCRIBED": "Sie sind nicht für diesen Dienst angemeldet (Code: 1003)"
+    },
+    "SIGNATURE": {
+      "REQUEST_NOT_FOUND": "Signaturanfrage nicht gefunden (code: 2500)",
+      "SIGNER_NOT_FOUND": "Unterzeichner nicht gefunden (code: 2501)",
+      "NOT_YOUR_SLOT": "Diese Unterschrift wird nicht von Ihnen verlangt (code: 2502)",
+      "MODULE_DISABLED": "Die elektronische Signatur ist für diese Gemeinschaft nicht aktiviert (code: 2503)",
+      "ARTIFACT_NOT_READY": "Dieses Dokument ist noch nicht verfügbar (code: 2504)",
+      "STORAGE_FAILED": "Das Dokument konnte nicht gelesen werden, bitte erneut versuchen (code: 2505)",
+      "STEP_UP_REQUIRED": "Bitte melden Sie sich zum Unterzeichnen erneut an (code: 2510)",
+      "DOCUMENT_CHANGED": "Das angezeigte Dokument entspricht nicht dem zu unterzeichnenden, laden Sie die Seite neu (code: 2511)",
+      "SLOT_NOT_OPEN": "Diese Unterschrift wird nicht oder nicht mehr erwartet (code: 2512)",
+      "REQUEST_NOT_OPEN": "Diese Signaturanfrage ist abgeschlossen (code: 2513)",
+      "CONSENT_REQUIRED": "Kreuzen Sie die Einverständniserklärung an, um zu unterzeichnen (code: 2514)",
+      "REQUIRED_FIELD_MISSING": "Ein Pflichtfeld ist leer (code: 2515)",
+      "INVALID_FIELD_VALUE": "Ein eingegebener Wert ist ungültig (code: 2516)",
+      "INVALID_SIGNATURE_IMAGE": "Die Unterschrift konnte nicht gelesen werden (code: 2517)",
+      "TYPED_NAME_REQUIRED": "Geben Sie Ihren Namen ein, um zu unterzeichnen (code: 2518)",
+      "DECLINE_REASON_REQUIRED": "Geben Sie den Grund der Ablehnung an (code: 2519)",
+      "TOO_MANY_ATTEMPTS": "Zu viele Versuche, versuchen Sie es in einer Minute erneut (code: 2520)",
+      "REMINDED_RECENTLY": "In den letzten 24 Stunden wurde bereits eine Erinnerung gesendet (code: 2530)",
+      "QUEUE_UNAVAILABLE": "Der Signaturdienst ist vorübergehend nicht verfügbar (code: 2531)"
+    }
+  }
+}

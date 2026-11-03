@@ -1,0 +1,26 @@
+[
+  {
+    "name": "SIGNATURE_REQUESTS",
+    "subjects": ["signature.request.>"],
+    "retention": "work_queue",
+    "storage": "file"
+  },
+  {
+    "name": "SIGNATURE_JOBS",
+    "subjects": ["signature.job.>"],
+    "retention": "work_queue",
+    "storage": "file"
+  },
+  {
+    "name": "SIGNATURE_EVENTS",
+    "subjects": ["signature.event.>"],
+    "retention": "limits",
+    "storage": "file"
+  },
+  {
+    "name": "SIGNATURE_DLQ",
+    "subjects": ["signature.dlq.>"],
+    "retention": "limits",
+    "storage": "file"
+  }
+]

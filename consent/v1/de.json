@@ -1,0 +1,5 @@
+{
+  "SELF": "Ich habe dieses Dokument gelesen und unterzeichne es elektronisch im eigenen Namen.",
+  "LEGAL_REPRESENTATIVE": "Ich habe dieses Dokument gelesen und unterzeichne es elektronisch als gesetzlicher Vertreter von {member}.",
+  "COMMUNITY_ADMIN": "Ich habe dieses Dokument gelesen und unterzeichne es elektronisch für die Gemeinschaft {community}."
+}

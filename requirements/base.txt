@@ -1,0 +1,53 @@
+# Core framework
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+
+# Pydantic
+pydantic==2.10.3
+pydantic-settings==2.6.1
+email-validator>=2.0.0
+
+# Nats
+nats-py==2.14.0
+
+# AWS — aiobotocore is the async S3/MinIO client. It pulls a compatible
+# botocore range itself; do not separately pin boto3 unless you need its
+# sync client. When upgrading, verify against:
+# https://github.com/aio-libs/aiobotocore/releases
+aiobotocore==2.15.2
+
+# Logging
+python-json-logger==3.2.0
+
+opentelemetry-api==1.39.1
+opentelemetry-exporter-otlp-proto-common==1.39.1
+opentelemetry-exporter-otlp-proto-grpc==1.39.1
+opentelemetry-exporter-otlp-proto-http==1.39.1
+opentelemetry-instrumentation==0.60b1
+opentelemetry-instrumentation-asgi==0.60b1
+opentelemetry-instrumentation-fastapi==0.60b1
+opentelemetry-instrumentation-sqlalchemy==0.60b1
+opentelemetry-proto==1.39.1
+opentelemetry-sdk==1.39.1
+opentelemetry-semantic-conventions==0.60b1
+opentelemetry-util-http==0.60b1
+
+# Calendar-month offsets ("+6 months") in engine/calendar.py; the holidays
+# themselves are data, in each regulator plugin's calendar/<REGION>.yaml.
+python-dateutil==2.9.0.post0
+
+# The regulator plugins' catalogues and holiday calendars are versioned YAML
+# files (regulators/<plugin>/catalogue, calendar), read at startup by the API AND
+# the worker, so it is a base dependency. Always yaml.safe_load: see engine/catalogue.py.
+
+# Realtime SSE hints (fire-and-forget pub/sub consumed by crm-backend's hub).
+# redis.asyncio, not the unmaintained aioredis — it is aioredis's successor and
+# ships in the same package.
+redis==5.2.1
+
+# The signature image: decoded, checked and re-encoded by the API, stamped by
+# the worker (pyHanko's image support uses it too).
+pillow==13.0.0
+# Europe/Brussels for the dates on the documents, also where the OS has no
+# zoneinfo (Windows test runs).
+tzdata==2025.2

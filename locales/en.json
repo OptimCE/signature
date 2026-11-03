@@ -1,0 +1,34 @@
+{
+  "ERRORS": {
+    "AUTH": {
+      "UNAUTHORIZED": "Authentication required (code: 1)",
+      "FORBIDDEN": "Access denied (code: 2)",
+      "RATE_LIMITED": "Too many requests, please try again later (code: 3)",
+      "AUTHORIZATION_MISSING": "Missing authorization header (code: 4)"
+    },
+    "SUBSCRIPTION": {
+      "NOT_SUBSCRIBED": "You are not subscribed to this service (code: 1003)"
+    },
+    "SIGNATURE": {
+      "REQUEST_NOT_FOUND": "Signature request not found (code: 2500)",
+      "SIGNER_NOT_FOUND": "Signer not found (code: 2501)",
+      "NOT_YOUR_SLOT": "This signature is not asked of you (code: 2502)",
+      "MODULE_DISABLED": "Electronic signature is not enabled for this community (code: 2503)",
+      "ARTIFACT_NOT_READY": "This document is not available yet (code: 2504)",
+      "STORAGE_FAILED": "The document could not be read, please retry (code: 2505)",
+      "STEP_UP_REQUIRED": "Please sign in again to sign (code: 2510)",
+      "DOCUMENT_CHANGED": "The document shown does not match the one to sign, reload the page (code: 2511)",
+      "SLOT_NOT_OPEN": "This signature is not or no longer expected (code: 2512)",
+      "REQUEST_NOT_OPEN": "This signature request is closed (code: 2513)",
+      "CONSENT_REQUIRED": "Tick the consent statement to sign (code: 2514)",
+      "REQUIRED_FIELD_MISSING": "A required field is empty (code: 2515)",
+      "INVALID_FIELD_VALUE": "A value entered is not valid (code: 2516)",
+      "INVALID_SIGNATURE_IMAGE": "The signature could not be read (code: 2517)",
+      "TYPED_NAME_REQUIRED": "Type your name to sign (code: 2518)",
+      "DECLINE_REASON_REQUIRED": "Give the reason for declining (code: 2519)",
+      "TOO_MANY_ATTEMPTS": "Too many attempts, try again in a minute (code: 2520)",
+      "REMINDED_RECENTLY": "A reminder was already sent in the last 24 hours (code: 2530)",
+      "QUEUE_UNAVAILABLE": "The signature service is temporarily unavailable (code: 2531)"
+    }
+  }
+}

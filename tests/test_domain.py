@@ -1,0 +1,225 @@
+"""The pure parts: the hash chain, slots, the NATS payload, keys, wording."""
+
+import datetime
+import hashlib
+import uuid
+
+import pytest
+from pydantic import ValidationError
+
+from domain import wording
+from domain.evidence import canonical_json, event_hash, verify_chain
+from domain.payloads import CreateRequestIn
+from domain.slots import SlotError, normalise_rect, parse_slot
+from service.keys import document_allowed
+from shared.const import Capacity, SlotKind
+
+ORIGINAL = hashlib.sha256(b"%PDF-1.7 original").hexdigest()
+AT = datetime.datetime(2026, 11, 3, 9, 30, 0, 123456, tzinfo=datetime.UTC)
+
+
+def _chain(n: int) -> list[dict]:
+    rows: list[dict] = []
+    prev: str = ORIGINAL
+    request_id = uuid.uuid4()
+    for seq in range(1, n + 1):
+        row = {
+            "request_id": request_id,
+            "seq": seq,
+            "signer_id": None,
+            "type": "signer.viewed",
+            "at": AT + datetime.timedelta(seconds=seq),
+            "actor_sub": "sub",
+            "actor_user_id": 7,
+            "ip": "203.0.113.7",
+            "user_agent": "ua",
+            "keycloak_sid": "sid",
+            "auth_time": AT,
+            "acr": "1",
+            "document_sha256": ORIGINAL,
+            "consent_version": None,
+            "payload": {"revision": 1, "é": "Liège"},
+            "prev_hash": prev,
+        }
+        row["hash"] = event_hash(row)
+        prev = str(row["hash"])
+        rows.append(row)
+    return rows
+
+
+class TestTheChain:
+    def test_an_intact_chain_verifies_from_the_original_digest(self):
+        rows = _chain(4)
+        check = verify_chain(ORIGINAL, list(reversed(rows)))
+        assert check.ok
+        assert check.events == 4
+        assert check.head == rows[-1]["hash"]
+
+    def test_editing_one_field_of_one_row_breaks_it_there(self):
+        rows = _chain(4)
+        rows[1]["ip"] = "198.51.100.1"
+        check = verify_chain(ORIGINAL, rows)
+        assert not check.ok
+        assert (check.broken_at, check.reason) == (2, "hash")
+
+    def test_rehashing_an_edited_row_breaks_the_next_link(self):
+        rows = _chain(3)
+        rows[0]["payload"] = {"revision": 9}
+        rows[0]["hash"] = event_hash(rows[0])
+        check = verify_chain(ORIGINAL, rows)
+        assert (check.broken_at, check.reason) == (2, "prev_hash")
+
+    def test_a_removed_row_is_a_gap(self):
+        rows = _chain(3)
+        check = verify_chain(ORIGINAL, [rows[0], rows[2]])
+        assert (check.broken_at, check.reason) == (3, "sequence")
+
+    def test_a_chain_from_another_document_does_not_verify(self):
+        check = verify_chain(hashlib.sha256(b"other").hexdigest(), _chain(2))
+        assert (check.broken_at, check.reason) == (1, "prev_hash")
+
+    def test_canonical_json_sorts_keys_and_keeps_utf8(self):
+        assert canonical_json({"b": 1, "a": "é"}) == '{"a":"é","b":1}'.encode()
+
+    def test_naive_timestamps_and_floats_are_refused(self):
+        with pytest.raises(ValueError, match="timezone-aware"):
+            canonical_json({"at": datetime.datetime(2026, 1, 1)})
+        with pytest.raises(ValueError, match="no floats"):
+            canonical_json({"x": 1.5})
+
+
+class TestSlots:
+    @pytest.mark.parametrize(
+        ("raw", "kind"),
+        [
+            ({"field": "Champ de signature 1"}, SlotKind.FIELD),
+            ({"anchor": "[[sig:member]]"}, SlotKind.ANCHOR),
+            ({"box": {"page": 2, "rect": [10, 20, 200, 80]}}, SlotKind.BOX),
+            ({"page": {}}, SlotKind.PAGE),
+        ],
+    )
+    def test_the_four_kinds(self, raw, kind):
+        assert parse_slot(raw, for_signature=True).kind is kind
+
+    def test_a_box_page_is_one_based_in_the_contract(self):
+        assert parse_slot({"box": {"page": 1, "rect": [1, 2, 3, 4]}}, for_signature=True).page == 0
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            {},
+            {"field": ""},
+            {"anchor": "sig:member"},
+            {"box": {"page": 0, "rect": [1, 2, 3, 4]}},
+            {"box": {"page": 1, "rect": [10, 20, 5, 80]}},
+            {"field": "a", "anchor": "[[sig:a]]"},
+            {"anchor": "[[sig:a]]", "width": 2000},
+        ],
+    )
+    def test_malformed_slots_are_refused(self, raw):
+        with pytest.raises(SlotError):
+            parse_slot(raw, for_signature=True)
+
+    def test_only_a_signature_goes_on_an_appended_page(self):
+        with pytest.raises(SlotError):
+            parse_slot({"page": {}}, for_signature=False)
+
+    def test_rectangles_are_normalised(self):
+        assert normalise_rect([200, 80, 10, 20]) == (10, 20, 200, 80)
+
+
+def _payload(**overrides):
+    base = {
+        "idempotency_key": "admin-doc-1-v1",
+        "source_service": "administrative_document",
+        "source_ref": "document:1",
+        "community_id": 3,
+        "title": "Annexe 8",
+        "document_key": "administrative-document/3/1/v1/x.pdf",
+        "signers": [{"member_id": 5, "role_label": "Participant", "slot": {"field": "Sig"}}],
+    }
+    base.update(overrides)
+    return base
+
+
+class TestPayload:
+    def test_a_minimal_request(self):
+        parsed = CreateRequestIn.model_validate(_payload())
+        assert parsed.signing_order == "PARALLEL"
+        assert parsed.locale == "fr"
+
+    def test_an_admin_slot_names_a_user_not_a_member(self):
+        with pytest.raises(ValidationError):
+            CreateRequestIn.model_validate(
+                _payload(
+                    signers=[
+                        {
+                            "capacity": "COMMUNITY_ADMIN",
+                            "member_id": 5,
+                            "role_label": "x",
+                            "slot": {"page": {}},
+                        }
+                    ]
+                )
+            )
+        CreateRequestIn.model_validate(
+            _payload(
+                signers=[
+                    {
+                        "capacity": "COMMUNITY_ADMIN",
+                        "user": "sub",
+                        "role_label": "x",
+                        "slot": {"page": {}},
+                    }
+                ]
+            )
+        )
+
+    def test_unknown_keys_and_naive_expiry_are_refused(self):
+        with pytest.raises(ValidationError):
+            CreateRequestIn.model_validate(_payload(surprise=True))
+        with pytest.raises(ValidationError):
+            CreateRequestIn.model_validate(_payload(expires_at="2027-02-01T00:00:00"))
+
+    def test_a_document_key_may_not_climb(self):
+        with pytest.raises(ValidationError):
+            CreateRequestIn.model_validate(
+                _payload(document_key="administrative-document/3/../../x.pdf")
+            )
+
+
+class TestPrefixes:
+    def test_a_domain_names_only_its_own_prefix_in_its_community(self):
+        assert document_allowed(
+            "administrative_document", 3, "administrative-document/3/1/v1/x.pdf"
+        )
+        assert not document_allowed(
+            "administrative_document", 3, "administrative-document/4/1/v1/x.pdf"
+        )
+        assert not document_allowed("administrative_document", 3, "billing/3/x.pdf")
+        assert not document_allowed("billing", 3, "billing/3/x.pdf")
+
+
+class TestWording:
+    def test_the_consent_names_the_member_and_has_a_stable_digest(self):
+        first = wording.consent(
+            "v1", "fr", Capacity.LEGAL_REPRESENTATIVE, member="ACME SRL", community=None
+        )
+        again = wording.consent("v1", "fr", Capacity.SELF, member=None, community=None)
+        assert "ACME SRL" in first.text
+        assert first.sha256 == again.sha256
+        assert len(first.sha256) == 64
+
+    @pytest.mark.parametrize("locale", ["fr", "en", "nl", "de"])
+    def test_every_locale_has_every_capacity(self, locale):
+        for capacity in Capacity:
+            assert wording.consent("v1", locale, capacity, member="M", community="C").text
+            assert wording.reason(locale, capacity, name="N", member="M", community="C")
+
+    def test_the_stamp_and_the_date_are_in_brussels_time(self):
+        late = datetime.datetime(2026, 11, 3, 23, 30, tzinfo=datetime.UTC)
+        assert wording.signing_date("fr", late) == "04/11/2026"
+        assert (
+            wording.stamp_lines("fr", name="Alice", at=late, ref="AB12")[1]
+            == "le 04/11/2026 à 00:30"
+        )

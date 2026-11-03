@@ -1,0 +1,34 @@
+{
+  "ERRORS": {
+    "AUTH": {
+      "UNAUTHORIZED": "Authenticatie vereist (code: 1)",
+      "FORBIDDEN": "Toegang geweigerd (code: 2)",
+      "RATE_LIMITED": "Te veel verzoeken, probeer het later opnieuw (code: 3)",
+      "AUTHORIZATION_MISSING": "Autorisatie-header ontbreekt (code: 4)"
+    },
+    "SUBSCRIPTION": {
+      "NOT_SUBSCRIBED": "U bent niet geabonneerd op deze dienst (code: 1003)"
+    },
+    "SIGNATURE": {
+      "REQUEST_NOT_FOUND": "Ondertekeningsverzoek niet gevonden (code: 2500)",
+      "SIGNER_NOT_FOUND": "Ondertekenaar niet gevonden (code: 2501)",
+      "NOT_YOUR_SLOT": "Deze handtekening wordt niet aan u gevraagd (code: 2502)",
+      "MODULE_DISABLED": "Elektronische handtekening is niet geactiveerd voor deze gemeenschap (code: 2503)",
+      "ARTIFACT_NOT_READY": "Dit document is nog niet beschikbaar (code: 2504)",
+      "STORAGE_FAILED": "Het document kon niet worden gelezen, probeer opnieuw (code: 2505)",
+      "STEP_UP_REQUIRED": "Meld u opnieuw aan om te ondertekenen (code: 2510)",
+      "DOCUMENT_CHANGED": "Het getoonde document komt niet overeen met het te ondertekenen document, herlaad de pagina (code: 2511)",
+      "SLOT_NOT_OPEN": "Deze handtekening wordt niet of niet meer verwacht (code: 2512)",
+      "REQUEST_NOT_OPEN": "Dit ondertekeningsverzoek is afgesloten (code: 2513)",
+      "CONSENT_REQUIRED": "Vink de toestemmingsverklaring aan om te ondertekenen (code: 2514)",
+      "REQUIRED_FIELD_MISSING": "Een verplicht veld is niet ingevuld (code: 2515)",
+      "INVALID_FIELD_VALUE": "Een ingevoerde waarde is ongeldig (code: 2516)",
+      "INVALID_SIGNATURE_IMAGE": "De handtekening kon niet worden gelezen (code: 2517)",
+      "TYPED_NAME_REQUIRED": "Typ uw naam om te ondertekenen (code: 2518)",
+      "DECLINE_REASON_REQUIRED": "Geef de reden van de weigering op (code: 2519)",
+      "TOO_MANY_ATTEMPTS": "Te veel pogingen, probeer het over een minuut opnieuw (code: 2520)",
+      "REMINDED_RECENTLY": "Er werd de afgelopen 24 uur al een herinnering verstuurd (code: 2530)",
+      "QUEUE_UNAVAILABLE": "De ondertekeningsdienst is tijdelijk niet beschikbaar (code: 2531)"
+    }
+  }
+}

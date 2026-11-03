@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+.gitattributes
+.github
+
+# Python bytecode & caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.pyre
+.pytype
+cython_debug
+
+# Local env files (compose injects vars)
+.env
+.env.local
+.env.production
+.env.staging
+.env.test
+
+# Virtual environments
+.venv
+venv
+env
+ENV
+
+# Coverage & test artifacts
+htmlcov
+.coverage
+.coverage.*
+coverage.xml
+.codspeed
+
+# IDE / tooling
+.idea
+.vscode
+.claude
+
+# Build artifacts
+build/
+dist/
+*.egg
+
+# OS
+.DS_Store
+*~
+.cache
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml

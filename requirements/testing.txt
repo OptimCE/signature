@@ -1,0 +1,9 @@
+-r development.txt
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-docker==3.2.5
+pytest-cov==7.0.0
+httpx==0.28.1
+# A disposable PKI + timestamp authority for the tests and the dev stack
+# (devpki/, by pyHanko's author, MIT).
+certomancer[web-api]==0.16.0

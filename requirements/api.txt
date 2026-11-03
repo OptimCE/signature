@@ -1,0 +1,5 @@
+-r base.txt
+
+# HTTP framework
+fastapi==0.115.6
+uvicorn[standard]==0.32.1

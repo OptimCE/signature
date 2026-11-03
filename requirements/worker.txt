@@ -1,0 +1,9 @@
+-r base.txt
+
+# The seal: PAdES signatures, timestamps, validation data (MIT). pyHanko pulls
+# aiohttp (the TSA, OCSP and CRL fetches), asn1crypto, cryptography, lxml.
+pyHanko==0.38.0
+pyhanko-certvalidator==0.33.0
+# The preparation's rewrite (fields, flattening) and anchor search (BSD);
+# the same version document-generation renders the forms with.
+pypdf==5.1.0

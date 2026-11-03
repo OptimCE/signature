@@ -1,0 +1,34 @@
+{
+  "ERRORS": {
+    "AUTH": {
+      "UNAUTHORIZED": "Authentification requise (code: 1)",
+      "FORBIDDEN": "Accès refusé (code: 2)",
+      "RATE_LIMITED": "Trop de requêtes, veuillez réessayer plus tard (code: 3)",
+      "AUTHORIZATION_MISSING": "En-tête d'autorisation manquant (code: 4)"
+    },
+    "SUBSCRIPTION": {
+      "NOT_SUBSCRIBED": "Vous n'êtes pas abonné à ce service (code: 1003)"
+    },
+    "SIGNATURE": {
+      "REQUEST_NOT_FOUND": "Demande de signature introuvable (code: 2500)",
+      "SIGNER_NOT_FOUND": "Signataire introuvable (code: 2501)",
+      "NOT_YOUR_SLOT": "Cette signature ne vous est pas demandée (code: 2502)",
+      "MODULE_DISABLED": "La signature électronique n'est pas activée pour cette communauté (code: 2503)",
+      "ARTIFACT_NOT_READY": "Ce document n'est pas encore disponible (code: 2504)",
+      "STORAGE_FAILED": "Le document n'a pas pu être lu, réessayez (code: 2505)",
+      "STEP_UP_REQUIRED": "Reconnectez-vous pour signer (code: 2510)",
+      "DOCUMENT_CHANGED": "Le document affiché ne correspond pas à celui à signer, rechargez la page (code: 2511)",
+      "SLOT_NOT_OPEN": "Cette signature n'est pas ou plus attendue (code: 2512)",
+      "REQUEST_NOT_OPEN": "Cette demande de signature est close (code: 2513)",
+      "CONSENT_REQUIRED": "Cochez la déclaration de consentement pour signer (code: 2514)",
+      "REQUIRED_FIELD_MISSING": "Un champ obligatoire n'est pas rempli (code: 2515)",
+      "INVALID_FIELD_VALUE": "Une valeur saisie n'est pas valable (code: 2516)",
+      "INVALID_SIGNATURE_IMAGE": "La signature n'a pas pu être lue (code: 2517)",
+      "TYPED_NAME_REQUIRED": "Saisissez votre nom pour signer (code: 2518)",
+      "DECLINE_REASON_REQUIRED": "Indiquez la raison du refus (code: 2519)",
+      "TOO_MANY_ATTEMPTS": "Trop de tentatives, réessayez dans une minute (code: 2520)",
+      "REMINDED_RECENTLY": "Un rappel a déjà été envoyé ces dernières 24 heures (code: 2530)",
+      "QUEUE_UNAVAILABLE": "Le service de signature est momentanément indisponible (code: 2531)"
+    }
+  }
+}
