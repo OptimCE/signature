@@ -192,7 +192,8 @@ async def test_the_requeue_pass_finds_what_a_lost_publish_left(
             await session.execute(
                 text(
                     "UPDATE signature_signer SET status = 4, method = 1, image_key = 'k', "
-                    "image_sha256 = repeat('0', 64), signed_by_sub = 'x' WHERE id = :s"
+                    "image_sha256 = repeat('0', 64), signed_by_sub = 'x', "
+                    "signed_by_name = 'x' WHERE id = :s"
                 ),
                 {"s": slot.id},
             )

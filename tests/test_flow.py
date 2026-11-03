@@ -7,6 +7,7 @@ HTTP API with the gateway's headers.
 """
 
 import asyncio
+import io
 import json
 import os
 import pathlib
@@ -50,6 +51,18 @@ async def _notifications(session, user_id) -> list[str]:
         text("SELECT type FROM notification WHERE id_user = :u ORDER BY id"), {"u": user_id}
     )
     return list(rows.scalars())
+
+
+def _named(pdf: bytes) -> dict[str, tuple[str, str]]:
+    """Each signer's signature in the PDF: its /Name and /Reason, by field."""
+    from pyhanko.pdf_utils.reader import PdfFileReader
+
+    return {
+        sig.field_name: (str(sig.sig_object.get("/Name")), str(sig.sig_object.get("/Reason")))
+        for sig in PdfFileReader(io.BytesIO(pdf)).embedded_signatures
+        if sig.field_name != seal.CERTIFICATION_FIELD
+        and sig.sig_object.get("/Type") != "/DocTimeStamp"
+    }
 
 
 class TestSequentialTwoSigners:
@@ -113,6 +126,19 @@ class TestSequentialTwoSigners:
         assert [c.kind for c in checks] == ["signature", "signature", "signature", "timestamp"]
         assert checks[0].field_name == seal.CERTIFICATION_FIELD
         assert all(c.ok for c in checks)
+        # Each signature names the person, and the company Bob signs for.
+        assert sorted(_named(store.objects[request.final_key]).values()) == [
+            ("Alice Martin", "Signé par Alice Martin en son nom propre"),
+            ("Bob Dupont", "Signé par Bob Dupont en qualité de représentant légal de ACME SRL"),
+        ]
+        signed = await db_session.execute(
+            text(
+                "SELECT data->>'signer' FROM notification "
+                "WHERE id_user = :u AND type = 'signature.signed' ORDER BY id"
+            ),
+            {"u": world.mike.id},
+        )
+        assert list(signed.scalars()) == ["Alice Martin", "Bob Dupont"]
 
         types = await _events(db_session, request.id)
         assert types[0] == EventType.REQUEST_CREATED
@@ -129,6 +155,8 @@ class TestSequentialTwoSigners:
         assert evidence["signers"][0]["fields"]["place"] == "Liège"
         assert evidence["signers"][0]["capacity"] == "SELF"
         assert evidence["signers"][1]["capacity"] == "LEGAL_REPRESENTATIVE"
+        assert [s["signed_by_name"] for s in evidence["signers"]] == ["Alice Martin", "Bob Dupont"]
+        assert [s["display_name"] for s in evidence["signers"]] == ["Alice Martin", "ACME SRL"]
 
         # The artifacts, for a signer and for a manager.
         final = await client.get(
@@ -261,6 +289,23 @@ class TestOneSigner:
         assert response.status_code == 202
         (slot,) = await flow.signers(db_session, request.id)
         assert slot.signed_by_sub == world.eve.sub
+        # The PDF names Eve, for Alice: not Alice, and not « en son nom propre ».
+        assert slot.signed_by_name == "Eve Outsider"
+        await flow.seal(db_session, store, bus, material, request.id, slot.id)
+        request = await db_session.get(SignatureRequestModel, request.id, populate_existing=True)
+        revision = (
+            await db_session.execute(
+                select(SignatureRevisionModel).where(
+                    SignatureRevisionModel.request_id == request.id,
+                    SignatureRevisionModel.number == request.current_revision,
+                )
+            )
+        ).scalar_one()
+        if dump := os.getenv("SIGNATURE_SIGNED_DUMP"):  # to look at the four-line stamp
+            pathlib.Path(dump).write_bytes(store.objects[revision.key])
+        assert _named(store.objects[revision.key]) == {
+            slot.field_name: ("Eve Outsider", "Signé par Eve Outsider pour Alice Martin")
+        }
 
     async def test_view_is_recorded_once_per_revision(
         self, db_session, client, store, bus, material, world

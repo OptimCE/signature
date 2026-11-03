@@ -278,6 +278,12 @@ async def run_sign(
         values.append(seal.FieldValue(item.pdf_field_name, FieldType(item.type), item.value))
     community = await CrmRead(crm).community_name(request.id_community)
     capacity = Capacity(signer.capacity)
+    # The PDF names the person who signed (frozen at the sign call), and the
+    # member they signed for when that is not themselves.
+    person = signer.signed_by_name or signer.display_name
+    for_member = wording.signed_for(
+        capacity, person=person, slot_name=signer.display_name, member_label=signer.member_label
+    )
     try:
         data: bytes = await _timed(
             "sign",
@@ -287,14 +293,18 @@ async def run_sign(
             values=values,
             image_png=image,
             stamp_lines=wording.stamp_lines(
-                request.locale, name=signer.display_name, at=now, ref=wording.short_ref(request.id)
+                request.locale,
+                name=person,
+                at=now,
+                ref=wording.short_ref(request.id),
+                for_member=for_member,
             ),
-            signer_name=signer.display_name,
+            signer_name=person,
             reason=wording.reason(
                 request.locale,
                 capacity,
-                name=signer.display_name,
-                member=signer.member_label,
+                name=person,
+                member=for_member,
                 community=community,
             ),
             material=material(),

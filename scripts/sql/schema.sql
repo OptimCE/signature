@@ -151,6 +151,10 @@ CREATE TABLE IF NOT EXISTS signature_signer (
     image_sha256       CHAR(64),
     signed_by_sub      VARCHAR(255),
     signed_by_user_id  INTEGER,
+    -- The name the PDF and the evidence give whoever signed, frozen at the
+    -- sign call: the member's own name when its account signs its slot, the
+    -- account's name otherwise (a representative, another linked account).
+    signed_by_name     VARCHAR(255),
     -- The revision the signer viewed when they signed, and the one holding
     -- their signature.
     viewed_revision    INTEGER,
@@ -174,7 +178,8 @@ CREATE TABLE IF NOT EXISTS signature_signer (
     -- From the sign call on, the slot carries how it is signed and by whom.
     CONSTRAINT ck_signature_signer_signing CHECK (
         status NOT IN (4, 5)
-        OR (method IS NOT NULL AND image_key IS NOT NULL AND signed_by_sub IS NOT NULL)),
+        OR (method IS NOT NULL AND image_key IS NOT NULL AND signed_by_sub IS NOT NULL
+            AND signed_by_name IS NOT NULL)),
     CONSTRAINT ck_signature_signer_signed CHECK (
         status <> 5 OR (signed_at IS NOT NULL AND signed_revision IS NOT NULL)),
     CONSTRAINT ck_signature_signer_declined CHECK (

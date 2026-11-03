@@ -127,7 +127,11 @@ class Notifier:
             target=self._requester(request),
             category=NotificationCategory.INFORMATIONAL,
             channels=[Channel.INAPP],
-            data={**base, "signer": signer.display_name, "path": request_path(request)},
+            data={
+                **base,
+                "signer": signer.signed_by_name or signer.display_name,
+                "path": request_path(request),
+            },
         )
         if signer.signed_by_user_id is not None:
             self._hints.append(

@@ -334,6 +334,13 @@ async def sign(
     signer.image_sha256 = image_sha
     signer.signed_by_sub = caller.user.sub
     signer.signed_by_user_id = caller.user.id
+    signer.signed_by_name = wording.signed_by_name(
+        Capacity(signer.capacity),
+        user_name=caller.user.display_name,
+        user_email=caller.user.email,
+        slot_name=signer.display_name,
+        slot_email=signer.email,
+    )
     signer.viewed_revision = viewed
     await append_event(
         local,
@@ -345,6 +352,7 @@ async def sign(
         consent_version=request.consent_version,
         payload={
             "viewed_revision": viewed,
+            "signed_by_name": signer.signed_by_name,
             "method": body.method.name,
             "typed_name": typed or None,
             "image_sha256": image_sha,
@@ -395,6 +403,7 @@ async def decline(
     signer.declined_at = now
     signer.decline_reason = text
     signer.signed_by_sub = None
+    signer.signed_by_name = None
     request.status = int(RequestStatus.DECLINED)
     request.closed_at = now
     await append_event(

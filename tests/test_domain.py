@@ -216,6 +216,90 @@ class TestWording:
             assert wording.consent("v1", locale, capacity, member="M", community="C").text
             assert wording.reason(locale, capacity, name="N", member="M", community="C")
 
+    @pytest.mark.parametrize(
+        ("user_name", "user_email", "same"),
+        [
+            ("Alice Martin", "other@example.test", True),
+            ("martin  ALICE", None, True),  # order, case and spacing aside
+            ("Hélène Lefèvre-Dubois", None, False),  # another person
+            ("Eve Outsider", "ALICE@example.test", True),  # the same e-mail
+            ("", None, False),
+        ],
+    )
+    def test_same_person_is_the_same_email_or_the_same_name_words(
+        self, user_name, user_email, same
+    ):
+        assert (
+            wording.same_person(user_name, user_email, "Alice Martin", "alice@example.test") is same
+        )
+
+    def test_accents_and_hyphens_do_not_make_another_person(self):
+        assert wording.same_person("Helene Lefevre Dubois", None, "Hélène Lefèvre-Dubois", None)
+
+    def test_the_pdf_names_the_person_and_the_member_they_sign_for(self):
+        def who(capacity, user, slot="Alice Martin", label=None):
+            person = wording.signed_by_name(
+                capacity,
+                user_name=user,
+                user_email=None,
+                slot_name=slot,
+                slot_email="alice@example.test",
+            )
+            return person, wording.signed_for(
+                capacity, person=person, slot_name=slot, member_label=label
+            )
+
+        # Her own account: the member's name, on her own behalf.
+        assert who(Capacity.SELF, "alice MARTIN") == ("Alice Martin", None)
+        # Another account linked to her: named, for her.
+        assert who(Capacity.SELF, "Eve Outsider") == ("Eve Outsider", "Alice Martin")
+        # A company's representative: the person, for the company (never « ACME pour ACME »).
+        assert who(Capacity.LEGAL_REPRESENTATIVE, "Bob Dupont", "ACME SRL", "ACME SRL") == (
+            "Bob Dupont",
+            "ACME SRL",
+        )
+        assert who(Capacity.COMMUNITY_ADMIN, "Carol Admin", "Carol Admin") == ("Carol Admin", None)
+
+    def test_reason_and_stamp_say_who_signed_for_whom(self):
+        at = datetime.datetime(2026, 11, 3, 14, 26, tzinfo=datetime.UTC)
+        assert (
+            wording.reason("fr", Capacity.SELF, name="Alice Martin", member=None, community=None)
+            == "Signé par Alice Martin en son nom propre"
+        )
+        assert (
+            wording.reason(
+                "fr", Capacity.SELF, name="Eve Outsider", member="Alice Martin", community=None
+            )
+            == "Signé par Eve Outsider pour Alice Martin"
+        )
+        assert (
+            wording.reason(
+                "fr",
+                Capacity.LEGAL_REPRESENTATIVE,
+                name="Bob Dupont",
+                member="ACME SRL",
+                community=None,
+            )
+            == "Signé par Bob Dupont en qualité de représentant légal de ACME SRL"
+        )
+        assert wording.stamp_lines(
+            "fr", name="Bob Dupont", at=at, ref="E2A39C1D", for_member="ACME SRL"
+        ) == [
+            "Signé électroniquement par Bob Dupont",
+            "pour ACME SRL",
+            "le 03/11/2026 à 15:26",
+            "réf. E2A39C1D",
+        ]
+        assert len(wording.stamp_lines("fr", name="Alice Martin", at=at, ref="X")) == 3
+
+    @pytest.mark.parametrize("locale", ["fr", "en", "nl", "de"])
+    def test_every_locale_says_for_whom(self, locale):
+        at = datetime.datetime(2026, 11, 3, tzinfo=datetime.UTC)
+        own = wording.reason(locale, Capacity.SELF, name="N", member=None, community=None)
+        other = wording.reason(locale, Capacity.SELF, name="N", member="M", community=None)
+        assert other != own and "M" in other
+        assert "M" in wording.stamp_lines(locale, name="N", at=at, ref="R", for_member="M")[1]
+
     def test_the_stamp_and_the_date_are_in_brussels_time(self):
         late = datetime.datetime(2026, 11, 3, 23, 30, tzinfo=datetime.UTC)
         assert wording.signing_date("fr", late) == "04/11/2026"

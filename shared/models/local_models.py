@@ -94,6 +94,7 @@ class SignatureSignerModel(LocalBase):
     image_sha256: Mapped[str | None] = mapped_column(String(64))
     signed_by_sub: Mapped[str | None] = mapped_column(String(255))
     signed_by_user_id: Mapped[int | None] = mapped_column(Integer)
+    signed_by_name: Mapped[str | None] = mapped_column(String(255))
     viewed_revision: Mapped[int | None] = mapped_column(Integer)
     signed_revision: Mapped[int | None] = mapped_column(Integer)
     invited_at: Mapped[datetime.datetime | None] = mapped_column(TIMESTAMP(timezone=True))

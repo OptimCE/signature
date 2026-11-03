@@ -11,6 +11,8 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
+import re
+import unicodedata
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -79,6 +81,21 @@ _REASON = {
     },
 }
 
+# A member's own slot signed by another account linked to the member.
+_ON_BEHALF = {
+    "fr": "Signé par {name} pour {member}",
+    "en": "Signed by {name} for {member}",
+    "nl": "Ondertekend door {name} voor {member}",
+    "de": "Unterzeichnet von {name} für {member}",
+}
+
+_STAMP_FOR = {
+    "fr": "pour {member}",
+    "en": "for {member}",
+    "nl": "voor {member}",
+    "de": "für {member}",
+}
+
 _STAMP = {
     "fr": ("Signé électroniquement par", "le {date} à {time}", "réf. {ref}"),
     "en": ("Signed electronically by", "on {date} at {time}", "ref. {ref}"),
@@ -105,19 +122,83 @@ def _loc(locale: str) -> str:
     return locale if locale in LOCALES else DEFAULT_LOCALE
 
 
+def _name_words(name: str) -> list[str]:
+    plain = "".join(c for c in unicodedata.normalize("NFKD", name) if not unicodedata.combining(c))
+    return sorted(word for word in re.split(r"[\s\-]+", plain.casefold()) if word)
+
+
+def same_person(
+    user_name: str, user_email: str | None, member_name: str, member_email: str | None
+) -> bool:
+    """Whether the account signing a member's slot is that member: the same
+    e-mail, or the same words in the name (accents, case and order aside)."""
+    emails = {(e or "").strip().casefold() for e in (user_email, member_email)}
+    if len(emails) == 1 and "" not in emails:
+        return True
+    words = _name_words(user_name)
+    return bool(words) and words == _name_words(member_name)
+
+
+def signed_by_name(
+    capacity: Capacity,
+    *,
+    user_name: str,
+    user_email: str | None,
+    slot_name: str,
+    slot_email: str | None,
+) -> str:
+    """The name the PDF and the evidence give whoever signs, frozen at the sign call.
+
+    A member signing its own slot keeps the member's name, the one the
+    document was drawn up for; any other account is named as itself: the
+    representative of a company, another account linked to the member, an admin.
+    """
+    if capacity is Capacity.SELF and same_person(user_name, user_email, slot_name, slot_email):
+        return slot_name
+    return user_name
+
+
+def signed_for(
+    capacity: Capacity, *, person: str, slot_name: str, member_label: str | None
+) -> str | None:
+    """The member the person signs for, when it is not themselves."""
+    if capacity is Capacity.LEGAL_REPRESENTATIVE:
+        return member_label or slot_name
+    if capacity is Capacity.SELF and person != slot_name:
+        return slot_name
+    return None
+
+
 def reason(
     locale: str, capacity: Capacity, *, name: str, member: str | None, community: str | None
 ) -> str:
+    """``name`` is the person who signs; ``member`` what ``signed_for`` returns.
+
+    A SELF slot with a ``member`` was signed by another account linked to the
+    member, and says so (« pour … ») rather than « en son nom propre ».
+    """
+    if capacity is Capacity.SELF and member:
+        return _ON_BEHALF[_loc(locale)].format(name=name, member=member)
     return _REASON[_loc(locale)][capacity].format(
         name=name, member=member or "", community=community or ""
     )
 
 
-def stamp_lines(locale: str, *, name: str, at: datetime.datetime, ref: str) -> list[str]:
+def stamp_lines(
+    locale: str,
+    *,
+    name: str,
+    at: datetime.datetime,
+    ref: str,
+    for_member: str | None = None,
+) -> list[str]:
     local = at.astimezone(BRUSSELS)
     first, second, third = _STAMP[_loc(locale)]
+    lines = [f"{first} {name}"]
+    if for_member:
+        lines.append(_STAMP_FOR[_loc(locale)].format(member=for_member))
     return [
-        f"{first} {name}",
+        *lines,
         second.format(date=local.strftime("%d/%m/%Y"), time=local.strftime("%H:%M")),
         third.format(ref=ref),
     ]

@@ -30,8 +30,9 @@ its « Changes from the 01/11 draft »).
   the dev stack's `signature-test-pki`; never in a production image.
 - `consent/v1/<locale>.json` — the statement per capacity; a new wording is a
   new version folder, never an edit (its digest is in the evidence).
-- `document-templates/signature/evidence/v1/` — the evidence report (docgen
-  jinja-html). A change is a new version folder (docgen caches by URI).
+- `document-templates/signature/evidence/v2/` — the evidence report (docgen
+  jinja-html). A change is a new version folder (docgen caches by URI);
+  v2 (11-03) added « Signé par » (`signed_by_name`). v1 stays for old URIs.
 
 ## The flow
 1. A domain publishes `signature.request.create` (Event envelope, `domain/payloads.py`).
@@ -44,9 +45,13 @@ its « Changes from the 01/11 draft »).
    PARALLEL, the first in SEQUENTIAL).
 3. The sign call (API): step-up, authorization NOW (linked to the member, or
    still ADMIN), the browser's hash ∈ this request's revisions ≥ 1, consent,
-   fields, the PNG re-encoded; slot → SIGNING; job queued; 202.
+   fields, the PNG re-encoded; the signer's name frozen (`signed_by_name`: the
+   member's own name when its account signs, else the account's); slot →
+   SIGNING; job queued; 202.
 4. `run_sign`: fill + sign in one increment, revision n+1; next signer invited
-   or COMPLETING.
+   or COMPLETING. The stamp, /Name and /Reason name that person, « pour
+   <member> » when they sign for someone else (`wording.signed_for`), never
+   the slot's `display_name` alone (the member: « ACME pour ACME »).
 5. `run_complete`: DSS for every signature + document timestamp (B-LTA),
    `final.pdf`; `evidence.json` (after `verify_chain`); docgen renders the
    report; `handle_docgen_result` seals it (B-LT), COMPLETED, `completed` event.
