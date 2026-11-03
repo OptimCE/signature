@@ -250,6 +250,14 @@ class TestWording:
             "v1", "fr", Capacity.SELF, member="Alice Martin", community=None
         ).text == ("J'ai lu ce document et je le signe électroniquement en mon nom propre.")
 
+    def test_the_consent_files_are_lf_only(self):
+        """Their digest goes into the evidence: a CRLF checkout (core.autocrlf)
+        would give the same version another digest. `.gitattributes` keeps them
+        byte for byte; this catches a file that slipped past it."""
+        files = sorted(wording.CONSENT_DIR.glob("*/*.json"))
+        assert len(files) >= 8
+        assert [f.relative_to(wording.CONSENT_DIR) for f in files if b"\r" in f.read_bytes()] == []
+
     @pytest.mark.parametrize(
         ("user_name", "user_email", "same"),
         [

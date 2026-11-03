@@ -1,0 +1,4 @@
+# The consent statements are hashed byte for byte and their SHA-256 goes into
+# the evidence: never let git rewrite their line endings (core.autocrlf on
+# Windows would give the same version another digest).
+consent/** -text
