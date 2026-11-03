@@ -359,6 +359,13 @@ class TestOneSigner:
         evidence = json.loads(store.objects[request.evidence_json_key])
         (signer,) = evidence["signers"]
         assert (signer["signed_by_name"], signer["signed_for"]) == ("Eve Outsider", "Alice Martin")
+        # The request's page and the inbox say who signed, for the manager and for Eve.
+        page = await client.get(f"/requests/{request.id}", headers=headers(world.mike))
+        assert [
+            (s["display_name"], s["signed_by_name"]) for s in page.json()["data"]["signers"]
+        ] == [("Alice Martin", "Eve Outsider")]
+        done = await client.get("/me/requests?status=done", headers=headers(world.eve))
+        assert [row["signer"]["signed_by_name"] for row in done.json()["data"]] == ["Eve Outsider"]
 
         report = flow.render_evidence_html(evidence, request.evidence_json_sha256, "fr")
         assert "au nom et pour le compte de Alice Martin</dd>" in report

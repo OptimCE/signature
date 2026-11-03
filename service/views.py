@@ -127,6 +127,9 @@ def signer_view(signer: SignatureSignerModel) -> dict[str, Any]:
         "slot": signer.slot_resolved,
         "invited_at": _iso(signer.invited_at),
         "signed_at": _iso(signer.signed_at),
+        # Who signed, frozen at the sign call: a representative, or another
+        # account linked to the member, differs from display_name.
+        "signed_by_name": signer.signed_by_name,
         "declined_at": _iso(signer.declined_at),
         "decline_reason": signer.decline_reason,
     }
