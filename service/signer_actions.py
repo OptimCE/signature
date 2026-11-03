@@ -131,6 +131,20 @@ def signer_name_for(signer: SignatureSignerModel, user: UserInfo) -> str:
     )
 
 
+def on_behalf_of(signer: SignatureSignerModel, user: UserInfo) -> str | None:
+    """The member ``user`` signs this slot for when it is not themselves: a
+    member's own slot reached through another linked account. None otherwise
+    (their own slot; a representative's capacity already names the company)."""
+    if Capacity(signer.capacity) is not Capacity.SELF:
+        return None
+    return wording.signed_for(
+        Capacity.SELF,
+        person=signer_name_for(signer, user),
+        slot_name=signer.display_name,
+        member_label=signer.member_label,
+    )
+
+
 def consent_for(
     request: SignatureRequestModel,
     signer: SignatureSignerModel,

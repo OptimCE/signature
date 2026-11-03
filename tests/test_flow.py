@@ -296,11 +296,20 @@ class TestOneSigner:
             "Alice Martin, qui m'en a donné l'autorisation."
         )
         consents = {}
+        behalf: dict[str, list] = {}
         for user in (world.alice, world.eve):
             detail = await client.get(f"/requests/{request.id}", headers=headers(user))
             consents[user.sub] = detail.json()["data"]["my_slots"][0]["consent_text"]
+            inbox = await client.get("/me/requests?status=pending", headers=headers(user))
+            behalf[user.sub] = [
+                detail.json()["data"]["signers"][0]["on_behalf_of"],
+                *(row["signer"]["on_behalf_of"] for row in inbox.json()["data"]),
+            ]
         assert consents[world.alice.sub].endswith("en mon nom propre.")
         assert consents[world.eve.sub] == on_behalf
+        # Before signing, the screens say it too: the page, the signing screen, the inbox.
+        assert behalf[world.alice.sub] == [None, None]
+        assert behalf[world.eve.sub] == ["Alice Martin", "Alice Martin"]
         response = await flow.sign(
             client, world.eve, request.id, slot.id, fields={"place": "Namur"}
         )

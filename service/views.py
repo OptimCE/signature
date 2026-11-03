@@ -21,7 +21,14 @@ from domain.evidence import verify_chain
 from ports.crm_read import CrmRead
 from ports.storage import DocumentStore, ObjectNotFound, TransientStorageError
 from service.log import event_row
-from service.signer_actions import Caller, consent_for, may_follow, may_sign, require_module
+from service.signer_actions import (
+    Caller,
+    consent_for,
+    may_follow,
+    may_sign,
+    on_behalf_of,
+    require_module,
+)
 from shared.const import (
     Capacity,
     FieldType,
@@ -180,7 +187,10 @@ async def my_requests(
         out.append(
             {
                 "request": request_summary(request, names[request.id_community]),
-                "signer": signer_view(signer),
+                "signer": {
+                    **signer_view(signer),
+                    "on_behalf_of": on_behalf_of(signer, caller.user),
+                },
                 "pending": pending,
                 "your_turn": pending
                 and signer.status in (SignerStatus.INVITED, SignerStatus.VIEWED),
@@ -238,7 +248,15 @@ async def detail(
     signed = sum(1 for s in seen.signers if s.status == SignerStatus.SIGNED)
     return {
         "request": request_summary(request, community),
-        "signers": [{**signer_view(s), "mine": s.id in mine} for s in seen.signers],
+        "signers": [
+            {
+                **signer_view(s),
+                "mine": s.id in mine,
+                # Before signing too: the screen says « pour le compte de … » as the consent does.
+                "on_behalf_of": on_behalf_of(s, caller.user) if s.id in mine else None,
+            }
+            for s in seen.signers
+        ],
         "progress": {"signed": signed, "total": len(seen.signers)},
         "document": (
             {
