@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.errors.errors import ErrorException
 from domain import wording
 from domain.evidence import verify_chain
-from ports.crm_read import CrmRead
+from ports.crm_read import CrmRead, UserInfo
 from ports.storage import DocumentStore, ObjectNotFound, TransientStorageError
 from service.log import event_row
 from service.signer_actions import (
@@ -142,14 +142,21 @@ def signer_view(signer: SignatureSignerModel) -> dict[str, Any]:
     }
 
 
-async def my_requests(
-    *, caller: Caller, local: AsyncSession, crm: AsyncSession, status: str | None
-) -> list[dict[str, Any]]:
-    read = CrmRead(crm)
-    member_ids = await read.member_ids_for_user(caller.user.id)
+async def slot_rows(
+    user: UserInfo, *, local: AsyncSession, crm: AsyncSession
+) -> list[tuple[SignatureSignerModel, SignatureRequestModel]]:
+    """The user's slots in every community, newest request first, whatever the module.
+
+    Theirs: an admin slot named for them, a slot they signed, or the slot of a
+    member linked to them now. An admin's slot of someone else is never theirs,
+    nor a member slot they are no longer linked to and did not sign. The inbox
+    adds the module gate; the data export does not (an export is not a use of
+    the module).
+    """
+    member_ids = await CrmRead(crm).member_ids_for_user(user.id)
     conditions = [
-        SignatureSignerModel.expected_user_sub == caller.user.sub,
-        SignatureSignerModel.signed_by_sub == caller.user.sub,
+        SignatureSignerModel.expected_user_sub == user.sub,
+        SignatureSignerModel.signed_by_sub == user.sub,
     ]
     if member_ids:
         conditions.append(SignatureSignerModel.id_member.in_(member_ids))
@@ -164,18 +171,25 @@ async def my_requests(
             .order_by(SignatureRequestModel.created_at.desc(), SignatureSignerModel.position)
         )
     ).all()
+    return [
+        (signer, request)
+        for signer, request in rows
+        if not (
+            signer.capacity == Capacity.COMMUNITY_ADMIN and signer.expected_user_sub != user.sub
+        )
+    ]
+
+
+async def my_requests(
+    *, caller: Caller, local: AsyncSession, crm: AsyncSession, status: str | None
+) -> list[dict[str, Any]]:
+    read = CrmRead(crm)
+    rows = await slot_rows(caller.user, local=local, crm=crm)
     active = await read.communities_with_module(r.id_community for _s, r in rows)
     names: dict[int, str | None] = {}
     out: list[dict[str, Any]] = []
     for signer, request in rows:
         if request.id_community not in active:
-            continue
-        # An admin's slot of someone else, or a member slot the caller is no
-        # longer linked to and did not sign: not theirs.
-        if (
-            signer.capacity == Capacity.COMMUNITY_ADMIN
-            and signer.expected_user_sub != caller.user.sub
-        ):
             continue
         pending = request.status == RequestStatus.OPEN and signer.status in PENDING_SLOT
         if status == "pending" and not pending:

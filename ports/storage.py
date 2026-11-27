@@ -17,6 +17,10 @@ class DocumentStore(Protocol):
 
     async def put(self, key: str, content: bytes, content_type: str) -> None: ...
 
+    async def size(self, key: str) -> int | None:
+        """The object's size, None when there is none (the data export's check)."""
+        ...
+
 
 class S3Store:
     def __init__(self, bucket: str | None = None) -> None:
@@ -27,6 +31,9 @@ class S3Store:
 
     async def put(self, key: str, content: bytes, content_type: str) -> None:
         await storage.upload(key, content, content_type=content_type, bucket=self._bucket)
+
+    async def size(self, key: str) -> int | None:
+        return await storage.size(key, bucket=self._bucket)
 
 
 @dataclass
@@ -44,3 +51,9 @@ class MemoryStore:
 
     async def put(self, key: str, content: bytes, content_type: str) -> None:
         self.objects[key] = content
+
+    async def size(self, key: str) -> int | None:
+        if self.fail_reads:
+            raise TransientStorageError("storage down")
+        content = self.objects.get(key)
+        return None if content is None else len(content)

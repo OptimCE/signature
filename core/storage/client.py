@@ -142,6 +142,29 @@ async def download(key: str, bucket: str | None = None) -> bytes:
         raise TransientStorageError(f"storage transport: {exc}") from exc
 
 
+async def size(key: str, bucket: str | None = None) -> int | None:
+    """The size of the object at ``key``, or None when there is none (a HEAD, no body).
+
+    The data export lists a stored file by reference only when it exists: a row whose
+    object is gone is listed as missing instead of failing every export of the community.
+    Transport and 5xx errors raise ``TransientStorageError`` (the export is retried).
+    """
+    try:
+        async with _client() as s3:
+            response = await s3.head_object(Bucket=bucket or settings.STORAGE_BUCKET, Key=key)
+            return int(response.get("ContentLength", 0))
+    except ClientError as exc:
+        error_code = exc.response.get("Error", {}).get("Code", "")
+        status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+        if error_code in _NOT_FOUND_CODES or status == 404:
+            return None
+        if status is not None and 500 <= status < 600:
+            raise TransientStorageError(f"storage {status} for {key}") from exc
+        raise
+    except (TimeoutError, EndpointConnectionError, BotoConnectionError, ReadTimeoutError) as exc:
+        raise TransientStorageError(f"storage transport: {exc}") from exc
+
+
 async def delete(key: str, bucket: str | None = None) -> None:
     """Delete the object at ``key``. Idempotent and best-effort.
 
