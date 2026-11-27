@@ -4,10 +4,10 @@ Thank you for your interest in contributing! Issues and pull requests are
 welcome from everyone. By participating in this project, you agree to abide by
 our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-This repository is the **signature** microservice of the OptimCE
-platform. It tracks the regulatory dossiers and documents an energy community
-must produce and submit, journals every status change, and derives the resulting
-regulatory deadlines. It is one of several repositories under the
+This repository is the **signature** microservice of the OptimCE platform. It
+has the PDFs the platform generated signed inside the app, seals every revision,
+and keeps the evidence. See the [README](README.md) for how it works. It is one
+of several repositories under the
 [OptimCE organization](https://github.com/OptimCE); the full platform is
 assembled in the [monorepo](https://github.com/OptimCE/monorepo).
 
@@ -24,8 +24,9 @@ cd monorepo
 ./docker-stack.sh start
 ```
 
-In that stack this service runs as `signature` (see the monorepo
-README for the full setup).
+In that stack this service runs as `signature` and `signature-worker`, with
+`signature-test-pki` as a disposable seal and timestamp authority (see the
+monorepo README for the full setup).
 
 For working on the service code in isolation, you need **Python 3.12**:
 
@@ -35,20 +36,27 @@ cd signature
 python -m venv .venv
 # Windows: .venv\Scripts\activate  |  Unix: source .venv/bin/activate
 pip install -r requirements/testing.txt
-cp .env.exemple .env
+cp .env.exemple .env.local
 ```
 
-Apply the local schema and reference seeds, then start the API:
+Apply the local schema, then start the API and, in another terminal, the worker:
 
 ```bash
-psql "$LOCAL_DATABASE_URL" -f scripts/sql/schema.sql
-psql "$LOCAL_DATABASE_URL" -f scripts/sql/seeds/0002_wal_templates.sql
-psql "$LOCAL_DATABASE_URL" -f scripts/sql/seeds/0003_wal_templates_phase2.sql
+psql -d signature_local -f scripts/sql/schema.sql
 uvicorn main:app --reload
+python -m worker.main
 ```
 
-It still needs reachable NATS, MinIO, and PostgreSQL instances — the monorepo
+They still need reachable NATS, MinIO, and PostgreSQL instances — the monorepo
 stack is the simplest way to provide them.
+
+### Notes on the code
+
+- A new consent wording is a new folder under `consent/`, and a new evidence
+  template a new folder under `document-templates/signature/evidence/`: never
+  edit a published version, its digest is in the evidence.
+- The worker image has no FastAPI and no `api/`; the API image has no pyHanko and
+  no `crypto/`. `tests/test_worker_import_graph.py` checks both.
 
 ### A note on the schema
 
@@ -95,10 +103,10 @@ Use short, imperative commit messages, preferably following the
 [Conventional Commits](https://www.conventionalcommits.org/) style:
 
 ```
-feat: add the cessation dossier type
-fix: count the submission day as day zero for business-day deadlines
-chore: bump workalendar to 17.0.0
-docs: document the deadline sweep endpoint
+feat: let a signer draw their initials
+fix: keep the signer's name frozen when the account changes
+chore: bump pyhanko
+docs: document the step-up check
 ```
 
 ## License
