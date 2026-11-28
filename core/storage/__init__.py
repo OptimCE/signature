@@ -8,6 +8,7 @@ Exposed surface:
 - ``upload(key, content, content_type=None, bucket=None)`` — put_object
 - ``download(key, bucket=None) -> bytes`` — get_object
 - ``delete(key, bucket=None)`` — best-effort delete_object
+- ``size(key, bucket=None) -> int | None`` — head_object, None when absent
 - ``build_s3_uri(bucket, key)`` / ``parse_s3_uri(uri)`` — the ``file_ref`` form
 - ``ObjectNotFound`` — raised by ``download`` when the key does not exist
 - ``TransientStorageError`` — raised by ``download`` for retryable errors
@@ -20,6 +21,7 @@ from core.storage.client import (
     delete,
     download,
     parse_s3_uri,
+    size,
     upload,
 )
 
@@ -30,5 +32,6 @@ __all__ = [
     "delete",
     "download",
     "parse_s3_uri",
+    "size",
     "upload",
 ]

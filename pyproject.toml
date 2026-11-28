@@ -50,6 +50,7 @@ module = [
     "botocore.*",
     "certomancer.*",
     "dateutil.*",
+    "jsonschema.*",
     "werkzeug.*",
 ]
 ignore_missing_imports = true

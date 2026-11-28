@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -19,6 +20,7 @@ from core.middleware.set_auth_context import GatewayScopeMiddleware
 from core.queue.init import close_nats, init_nats
 from core.realtime import log_realtime_state
 from core.tracing import enrich_span, setup_tracer_provider
+from service.export import start_export_consumer, stop_export_consumer
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -32,7 +34,12 @@ async def lifespan(app: FastAPI):
     setup_tracer_provider()
     # The API publishes the sign jobs: it declares the streams too.
     await init_nats()
+    # The data export's signature part (one at a time); disabled, and logged, without its
+    # EXPORT_STORAGE_* account. The EXPORTS stream is crm-backend's: the consumer waits for it.
+    export_stop = asyncio.Event()
+    export_task = start_export_consumer(export_stop)
     yield
+    await stop_export_consumer(export_task, export_stop)
     await close_nats()
 
 

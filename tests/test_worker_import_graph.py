@@ -42,8 +42,9 @@ WORKER_MODULES = ["worker.main", "worker.scheduler", "worker.dispatcher"]
 
 # Top-level distributions `requirements/worker.txt` does not install. The first
 # three come with fastapi/uvicorn; `jose` and `auth0` are api.txt-only too, and
-# would be just as fatal.
-ABSENT_FROM_THE_WORKER_IMAGE = ["fastapi", "starlette", "uvicorn", "jose", "auth0"]
+# would be just as fatal. `jsonschema` is the data-export kit's (core/export), started by the API
+# only: api.txt installs it, worker.txt does not.
+ABSENT_FROM_THE_WORKER_IMAGE = ["fastapi", "starlette", "uvicorn", "jose", "auth0", "jsonschema"]
 
 _PROBE_BODY = '''
 import importlib
